@@ -11,10 +11,10 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /workers/grow.js
- * @version     0.1.0
+ * @version     0.1.1
  * @author      Claude (Godlike AI Operator)
  * @description Worker minimal GROW - RAM ultra-optimisé
- *              Exécute grow() sur cible spécifiée
+ *              BOUCLE INFINIE - Exécute grow() en continu
  * 
  * @usage
  *   run /workers/grow.js <target>
@@ -24,14 +24,16 @@
  *   <target>   Hostname du serveur cible
  * 
  * @changelog
+ *   v0.1.1 - 2025-01-XX - HOTFIX: Boucle infinie pour grow permanent
  *   v0.1.0 - 2025-01-XX - Initial release
- *            - Worker ultra-light pour déploiement massif
- *            - RAM: ~1.75GB
- *            - Pas de logs (économie RAM)
  */
 
 /** @param {NS} ns */
 export async function main(ns) {
     const target = ns.args[0];
-    await ns.grow(target);
+    
+    // BOUCLE INFINIE - Le worker ne se termine jamais
+    while (true) {
+        await ns.grow(target);
+    }
 }
