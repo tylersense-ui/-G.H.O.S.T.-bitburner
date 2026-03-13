@@ -32,8 +32,8 @@
  *            - Vérification intégrité via manifest.json
  */
 
-const DEFAULT_USER = "USERNAME"; // À REMPLACER par votre GitHub username
-const DEFAULT_REPO = "ghost-bitburner";
+const DEFAULT_USER = "tylersense-ui"; 
+const DEFAULT_REPO = "-G.H.O.S.T.-bitburner";
 const DEFAULT_BRANCH = "main";
 
 /** @param {NS} ns */
