@@ -1,0 +1,93 @@
+{
+  "framework": "G.H.O.S.T.",
+  "fullName": "Godlike Heuristic Operator & Strategy Toolkit",
+  "version": "0.1.0",
+  "author": "Claude (Godlike AI Operator)",
+  "description": "Framework d'automatisation Bitburner pour BN1.1 - Bootstrap économique, monitoring, auto-root, worker deployment",
+  "bitnode": "BN-1.1",
+  "sourceFiles": "none",
+  
+  "files": {
+    "core": [
+      "/boot.js",
+      "/core/spider.js",
+      "/core/deploy-workers.js"
+    ],
+    "lib": [
+      "/lib/state-manager.js",
+      "/lib/debug.js"
+    ],
+    "workers": [
+      "/workers/hack.js",
+      "/workers/grow.js",
+      "/workers/weaken.js"
+    ],
+    "tools": [
+      "/tools/telemetry.js",
+      "/tools/blackbox.js",
+      "/tools/log-action.js"
+    ],
+    "deployment": [
+      "/deploy-ghost.js",
+      "/manifest.json"
+    ],
+    "documentation": [
+      "/README.md",
+      "/CHANGELOG.md"
+    ]
+  },
+  
+  "features": {
+    "monitoring": "Telemetry daemon - Monitoring permanent network/performance/player",
+    "autoRoot": "Spider - Auto-root BFS network scanner avec NUKE",
+    "deployment": "Deploy-workers - Distribution intelligente workers sur réseau",
+    "contracts": "BlackBox - Solveur automatique contrats (.cct) - 8 algorithmes",
+    "persistence": "State Manager - API JSON pour /state/ persistence",
+    "debug": "Système DEBUG multi-niveaux (0-3) avec toasts/tail/couleurs"
+  },
+  
+  "dependencies": {
+    "bitburner": ">=2.0.0",
+    "nodejs": "none",
+    "external": "none"
+  },
+  
+  "deployment": {
+    "method": "GitHub",
+    "script": "/deploy-ghost.js",
+    "repository": "https://github.com/USERNAME/ghost-bitburner"
+  },
+  
+  "phases": {
+    "phase1": {
+      "name": "Bootstrap Économique",
+      "status": "IN_PROGRESS",
+      "objectives": [
+        "Rooter n00dles, foodnstuff, joesguns",
+        "Déployer workers sur tous serveurs rootés",
+        "Générer $100k-500k pour upgrades RAM"
+      ]
+    },
+    "phase2": {
+      "name": "Expansion",
+      "status": "PLANNED",
+      "objectives": [
+        "Acheter premiers purchased servers",
+        "Upgrade home RAM",
+        "Rejoindre premières factions"
+      ]
+    },
+    "phase3": {
+      "name": "Endgame BN1",
+      "status": "PLANNED",
+      "objectives": [
+        "Rejoindre Daedalus",
+        "Acheter The Red Pill",
+        "Hack w0r1d_d43m0n"
+      ]
+    }
+  },
+  
+  "lastUpdate": "2025-01-XX",
+  "status": "STABLE"
+}
