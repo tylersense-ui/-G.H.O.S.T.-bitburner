@@ -1,0 +1,134 @@
+/**
+ * ╔═══════════════════════════════════════════════════════════╗
+ * ║  ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗             ║
+ * ║ ██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝             ║
+ * ║ ██║  ███╗███████║██║   ██║███████╗   ██║                ║
+ * ║ ██║   ██║██╔══██║██║   ██║╚════██║   ██║                ║
+ * ║ ╚██████╔╝██║  ██║╚██████╔╝███████║   ██║                ║
+ * ║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝                ║
+ * ║                                                           ║
+ * ║  Godlike Heuristic Operator & Strategy Toolkit           ║
+ * ╚═══════════════════════════════════════════════════════════╝
+ * 
+ * @file        /tools/global-kill.js
+ * @version     0.2.1
+ * @author      Claude (Godlike AI Operator)
+ * @description Killall intelligent - Tue TOUT sauf telemetry
+ *              Scan TOUS les serveurs (home + purchased + réseau)
+ * 
+ * @usage
+ *   run /tools/global-kill.js
+ *   run /tools/global-kill.js --keep-telemetry false
+ * 
+ * @commands
+ *   --keep-telemetry <bool>   Garder telemetry ? (défaut: true)
+ * 
+ * @changelog
+ *   v0.2.1 - 2025-01-XX - G.H.O.S.T. v0.2.1 Hotfix
+ *            - NEW: Killall intelligent avec exclusions
+ *            - Scan réseau complet (BFS)
+ *            - Option --keep-telemetry
+ *            - Stats détaillées
+ */
+
+/** @param {NS} ns */
+export async function main(ns) {
+    ns.disableLog("ALL");
+    ns.ui.openTail();
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // CONFIG
+    // ═══════════════════════════════════════════════════════════════════
+    const keepTelemetry = ns.args[ns.args.indexOf("--keep-telemetry") + 1] !== "false";
+    
+    ns.print("╔═══════════════════════════════════════════════════════════╗");
+    ns.print("║  💀 GLOBAL KILL - INTELLIGENT KILLALL                     ║");
+    ns.print("╚═══════════════════════════════════════════════════════════╝");
+    ns.print("");
+    ns.print(`⚙️  Keep telemetry: ${keepTelemetry ? "✅ YES" : "❌ NO"}`);
+    ns.print("");
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SCAN NETWORK (BFS)
+    // ═══════════════════════════════════════════════════════════════════
+    ns.print("🌐 Scanning network...");
+    const servers = scanNetwork(ns);
+    ns.print(`   Found ${servers.length} servers`);
+    ns.print("");
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // KILL PROCESSES
+    // ═══════════════════════════════════════════════════════════════════
+    let totalKilled = 0;
+    let totalKept = 0;
+    let serversProcessed = 0;
+    
+    for (const server of servers) {
+        const processes = ns.ps(server);
+        
+        if (processes.length === 0) continue;
+        
+        serversProcessed++;
+        
+        for (const proc of processes) {
+            // Exclusion telemetry si demandé
+            if (keepTelemetry && proc.filename === "/tools/telemetry.js") {
+                totalKept++;
+                ns.print(`✅ [${server}] KEPT: ${proc.filename} (PID: ${proc.pid})`);
+                continue;
+            }
+            
+            // Kill le processus
+            const killed = ns.kill(proc.pid);
+            
+            if (killed) {
+                totalKilled++;
+                ns.print(`💀 [${server}] KILLED: ${proc.filename} (PID: ${proc.pid})`);
+            }
+        }
+    }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STATS FINALES
+    // ═══════════════════════════════════════════════════════════════════
+    ns.print("");
+    ns.print("╔═══════════════════════════════════════════════════════════╗");
+    ns.print("║  📊 GLOBAL KILL RESULTS                                   ║");
+    ns.print("╚═══════════════════════════════════════════════════════════╝");
+    ns.print(`🌐 Servers scanned: ${servers.length}`);
+    ns.print(`💻 Servers with processes: ${serversProcessed}`);
+    ns.print(`💀 Processes killed: ${totalKilled}`);
+    ns.print(`✅ Processes kept: ${totalKept}`);
+    ns.print("");
+    
+    if (totalKilled > 0) {
+        ns.tprint("════════════════════════════════════════════════════════════");
+        ns.tprint(`💀 GLOBAL KILL: ${totalKilled} processes terminated`);
+        if (keepTelemetry) {
+            ns.tprint(`✅ Telemetry preserved`);
+        }
+        ns.tprint("════════════════════════════════════════════════════════════");
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// HELPER: SCAN NETWORK (BFS)
+// ═══════════════════════════════════════════════════════════════════════
+function scanNetwork(ns) {
+    const servers = ["home"];
+    const visited = new Set(["home"]);
+    
+    for (let i = 0; i < servers.length; i++) {
+        const host = servers[i];
+        const neighbors = ns.scan(host);
+        
+        for (const neighbor of neighbors) {
+            if (!visited.has(neighbor)) {
+                visited.add(neighbor);
+                servers.push(neighbor);
+            }
+        }
+    }
+    
+    return servers;
+}

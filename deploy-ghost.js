@@ -11,25 +11,21 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /deploy-ghost.js
- * @version     0.1.0
+ * @version     0.3.0
  * @author      Claude (Godlike AI Operator)
- * @description Déploiement automatique G.H.O.S.T. depuis GitHub
- *              Wget tous les fichiers depuis repo, structure complète
+ * @description Déploiement auto-update G.H.O.S.T. depuis GitHub
+ *              AUTO-UPDATE : Se télécharge lui-même en premier !
  * 
  * @usage
  *   run /deploy-ghost.js
  *   run /deploy-ghost.js --user YourGitHubUsername
  * 
- * @commands
- *   --user <name>   Username GitHub (défaut: ghost-bitburner)
- *   --branch <name> Branch Git (défaut: main)
- * 
  * @changelog
+ *   v0.3.0 - 2025-01-XX - G.H.O.S.T. v0.3.0 NEXUS Fusion
+ *            - Liste fichiers v0.3.0 complète (7 lib/)
+ *   v0.2.1 - 2025-01-XX - HOTFIX: Auto-update + liste complète v0.2.0
+ *   v0.2.0 - 2025-01-XX - Ajout fichiers Trinity Matrix
  *   v0.1.0 - 2025-01-XX - Initial release
- *            - Wget automatique depuis GitHub
- *            - Création structure /core/, /lib/, /workers/, /tools/
- *            - Téléchargement tous fichiers framework
- *            - Vérification intégrité via manifest.json
  */
 
 const DEFAULT_USER = "tylersense-ui"; 
@@ -39,7 +35,7 @@ const DEFAULT_BRANCH = "main";
 /** @param {NS} ns */
 export async function main(ns) {
     ns.disableLog("ALL");
-    ns.tail();
+    ns.ui.openTail();
     
     // ═══════════════════════════════════════════════════════════════════
     // CONFIG
@@ -51,7 +47,7 @@ export async function main(ns) {
     const baseUrl = `https://raw.githubusercontent.com/${user}/${repo}/${branch}`;
     
     ns.print("╔═══════════════════════════════════════════════════════════╗");
-    ns.print("║  🚀 G.H.O.S.T. DEPLOYMENT FROM GITHUB                     ║");
+    ns.print("║  🚀 G.H.O.S.T. AUTO-UPDATE DEPLOYMENT                     ║");
     ns.print("╚═══════════════════════════════════════════════════════════╝");
     ns.print("");
     ns.print(`📦 Repository: ${user}/${repo}`);
@@ -60,32 +56,55 @@ export async function main(ns) {
     ns.print("");
     
     // ═══════════════════════════════════════════════════════════════════
-    // FILE LIST
+    // ÉTAPE 0 : AUTO-UPDATE DE deploy-ghost.js LUI-MÊME
+    // ═══════════════════════════════════════════════════════════════════
+    ns.print("🔄 STEP 0: Self-update deploy-ghost.js...");
+    const selfUrl = `${baseUrl}/deploy-ghost.js`;
+    const selfUpdate = await ns.wget(selfUrl, "/deploy-ghost.js", "home");
+    
+    if (selfUpdate) {
+        ns.print("   ✅ deploy-ghost.js updated!");
+    } else {
+        ns.print("   ⚠️  Self-update failed (might be already latest)");
+    }
+    ns.print("");
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // FILE LIST - COMPLET v0.2.0 TRINITY MATRIX
     // ═══════════════════════════════════════════════════════════════════
     const files = [
-        // Core
+        // Core (5)
         "/boot.js",
-        "/manifest.json",
-        "/README.md",
-        "/CHANGELOG.md",
-        
-        // Core
         "/core/spider.js",
         "/core/deploy-workers.js",
+        "/core/target-selector.js",
+        "/core/auto-spider.js",
         
-        // Lib
+        // Lib (7) - NEXUS FUSION v0.3.0
         "/lib/state-manager.js",
         "/lib/debug.js",
+        "/lib/capabilities.js",
+        "/lib/constants.js",
+        "/lib/formulas-helper.js",
+        "/lib/logger.js",
+        "/lib/network.js",
         
-        // Workers
+        // Workers (3)
         "/workers/hack.js",
         "/workers/grow.js",
         "/workers/weaken.js",
         
-        // Tools
+        // Managers (1)
+        "/managers/server-manager.js",
+        
+        // Tools (4)
         "/tools/telemetry.js",
         "/tools/blackbox.js",
-        "/tools/log-action.js"
+        "/tools/log-action.js",
+        "/tools/global-kill.js",
+        
+        // Config
+        "/manifest.json"
     ];
     
     ns.print(`📋 Files to download: ${files.length}`);
@@ -126,22 +145,19 @@ export async function main(ns) {
     ns.print("");
     
     if (failed === 0) {
-        ns.print("🎉 G.H.O.S.T. v0.1.0 deployed successfully!");
+        ns.print("🎉 G.H.O.S.T. v0.2.0 Trinity Matrix deployed successfully!");
         ns.print("");
-        ns.print("💡 Next step:");
-        ns.print("   run /boot.js");
+        ns.print("💡 Next steps:");
+        ns.print("   1. run /tools/global-kill.js    (kill all except telemetry)");
+        ns.print("   2. run /boot.js                  (launch Trinity Matrix)");
         ns.print("");
         
         ns.tprint("════════════════════════════════════════════════════════════");
-        ns.tprint("✅ G.H.O.S.T. v0.1.0 DEPLOYED SUCCESSFULLY");
-        ns.tprint("🚀 Run: run /boot.js");
+        ns.tprint("✅ G.H.O.S.T. v0.2.0 TRINITY MATRIX DEPLOYED");
+        ns.tprint("🚀 Run: run /tools/global-kill.js && run /boot.js");
         ns.tprint("════════════════════════════════════════════════════════════");
     } else {
         ns.print("⚠️  Deployment incomplete - check failed files");
-        ns.print("💡 You may need to:");
-        ns.print("   1. Verify GitHub username in script");
-        ns.print("   2. Check repository is public");
-        ns.print("   3. Verify branch name");
         ns.print("");
         
         ns.tprint("⚠️  G.H.O.S.T. deployment incomplete - check logs");
