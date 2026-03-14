@@ -11,21 +11,27 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/deploy-workers.js
- * @version     0.1.0
+ * @version     0.2.0
  * @author      Claude (Godlike AI Operator)
  * @description Déploiement intelligent de workers sur réseau
  *              Copie workers sur serveurs rootés, lance threads optimaux
+ *              AUTO-TARGET: Lit best-target.json si non spécifié
  * 
  * @usage
  *   run /core/deploy-workers.js <target>
  *   run /core/deploy-workers.js n00dles
+ *   run /core/deploy-workers.js                    # Auto-target
  *   run /core/deploy-workers.js n00dles --debug 2
  * 
  * @commands
- *   <target>        Serveur cible pour hack/grow/weaken
+ *   <target>        Serveur cible (optionnel - lit best-target.json)
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
  * @changelog
+ *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
+ *            - MODIFIED: Auto-target depuis best-target.json
+ *            - Fallback n00dles si aucune target
+ *            - Intégration StateManager pour target
  *   v0.1.0 - 2025-01-XX - Initial release
  *            - Scan BFS du réseau
  *            - Copie workers sur serveurs rootés
@@ -35,6 +41,7 @@
  */
 
 import { Debug } from "/lib/debug.js";
+import { StateManager } from "/lib/state-manager.js";
 
 const WORKER_HACK = "/workers/hack.js";
 const WORKER_GROW = "/workers/grow.js";
@@ -47,17 +54,29 @@ export async function main(ns) {
     // ═══════════════════════════════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════════════════════════════
-    if (ns.args.length === 0) {
-        ns.tprint("❌ ERROR: Usage: run /core/deploy-workers.js <target>");
-        ns.tprint("📝 Example: run /core/deploy-workers.js n00dles");
-        return;
-    }
-    
-    const target = ns.args[0];
     const debugLevel = parseInt(ns.args[ns.args.indexOf("--debug") + 1]) || 1;
     const debug = new Debug(ns, debugLevel);
+    const stateMgr = new StateManager(ns);
     
-    debug.header("🚀 DEPLOY WORKERS v0.1.0");
+    // ═══════════════════════════════════════════════════════════════════
+    // AUTO-TARGET LOGIC (NEW v0.2.0)
+    // ═══════════════════════════════════════════════════════════════════
+    let target = ns.args[0];
+    
+    // If no target provided, try to load best-target.json
+    if (!target || target.startsWith("--")) {
+        const bestTarget = stateMgr.load("best-target.json");
+        
+        if (bestTarget && bestTarget.target) {
+            target = bestTarget.target;
+            debug.verbose(`🎯 Auto-target loaded: ${target} (score: ${bestTarget.score.toFixed(1)})`);
+        } else {
+            target = "n00dles";
+            debug.verbose(`🎯 Fallback target: ${target}`);
+        }
+    }
+    
+    debug.header("🚀 DEPLOY WORKERS v0.2.0");
     debug.normal(`🎯 Target: ${target}`);
     debug.normal("");
     
