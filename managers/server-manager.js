@@ -11,11 +11,12 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /managers/server-manager.js
- * @version     0.2.0
+ * @version     0.3.1
  * @author      Claude (Godlike AI Operator)
  * @description Gestionnaire automatique purchased servers Matrix
  *              Achète et upgrade servers avec noms Matrix stylés
  *              Déploie workers automatiquement après chaque action
+ *              AUTO-STOP quand tous les serveurs sont maxés
  * 
  * @usage
  *   run /managers/server-manager.js
@@ -38,12 +39,14 @@
  *   2. Si < 25 servers ET argent > 55k → Achète server 8GB
  *   3. Pour chaque server existant → Upgrade si argent suffisant
  *   4. Déploie workers après achat/upgrade
- *   5. Sleep → recommence
+ *   5. Si 25 servers × MAX_RAM → Auto-stop
+ *   6. Sleep → recommence
  * 
  * @upgrade_path
  *   8GB → 16GB → 32GB → 64GB → 128GB → 256GB → 512GB → 1TB
  * 
  * @changelog
+ *   v0.3.1 - 2025-01-XX - HOTFIX: Auto-stop quand tous serveurs maxés
  *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
  *            - NEW: Auto-achat purchased servers
  *            - 25 noms Matrix stylés
@@ -157,11 +160,14 @@ export async function main(ns) {
         // ═══════════════════════════════════════════════════════════
         debug.verbose("⬆️  Checking for upgrades...");
         
+        let allMaxed = true;  // v0.3.1: Track if all servers are maxed
+        
         for (const server of purchasedServers) {
             const currentRam = ns.getServerMaxRam(server);
             const nextRam = getNextUpgrade(currentRam);
             
             if (nextRam) {
+                allMaxed = false;  // v0.3.1: At least one server can be upgraded
                 const upgradeCost = ns.getPurchasedServerUpgradeCost(server, nextRam);
                 
                 if (upgradeCost > 0 && ns.getServerMoneyAvailable("home") > upgradeCost) {
@@ -183,6 +189,21 @@ export async function main(ns) {
         
         if (actionsThisCycle === 0) {
             debug.verbose("   No upgrades available this cycle");
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // v0.3.1: AUTO-STOP when all servers maxed
+        // ═══════════════════════════════════════════════════════════
+        if (purchasedServers.length === MAX_SERVERS && allMaxed) {
+            debug.normal("");
+            debug.separator();
+            debug.normal("🎉 ALL SERVERS MAXED OUT!");
+            debug.normal(`   ${MAX_SERVERS} servers × ${MAX_RAM}GB = ${ns.formatRam(MAX_SERVERS * MAX_RAM)}`);
+            debug.normal("");
+            debug.normal("💤 Server Manager mission complete - Shutting down...");
+            debug.separator();
+            debug.toastSuccess("All Matrix servers maxed! Manager stopping.");
+            break;  // Exit while loop
         }
         
         debug.normal("");

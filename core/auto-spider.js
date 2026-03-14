@@ -11,7 +11,7 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/auto-spider.js
- * @version     0.2.0
+ * @version     0.3.1
  * @author      Claude (Godlike AI Operator)
  * @description Daemon automatique de re-root et redéploiement
  *              Cycle 5 minutes : spider → target-selector → deploy
@@ -33,6 +33,12 @@
  *   4. Si nouveaux serveurs → redéploie workers
  *   5. Toast si changements détectés
  *   6. Sleep → recommence
+ * 
+ * @changelog
+ *   v0.3.1 - 2025-01-XX - HOTFIX: profitPerSecond support
+ *   v0.2.0 - 2025-01-XX - G.H.O.S.T. Trinity Matrix
+ *   v0.1.0 - 2025-01-XX - Initial release
+ */
  * 
  * @changelog
  *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
@@ -142,7 +148,11 @@ export async function main(ns) {
         // Load best target
         const bestTarget = stateMgr.load("best-target.json");
         if (bestTarget) {
-            debug.normal(`🎯 Current target: ${bestTarget.target} (score: ${bestTarget.score.toFixed(1)})`);
+            // v0.3.1 FIX: profitPerSecond au lieu de score
+            const metric = bestTarget.profitPerSecond 
+                ? `$${ns.formatNumber(bestTarget.profitPerSecond)}/s`
+                : `score ${(bestTarget.score || 0).toFixed(1)}`;
+            debug.normal(`🎯 Current target: ${bestTarget.target} (${metric})`);
         }
         
         debug.normal("");

@@ -71,8 +71,12 @@ export async function main(ns) {
         serversProcessed++;
         
         for (const proc of processes) {
-            // Exclusion telemetry si demandé
-            if (keepTelemetry && proc.filename === "/tools/telemetry.js") {
+            // Exclusion telemetry si demandé (check avec et sans slash initial)
+            if (keepTelemetry && (
+                proc.filename === "/tools/telemetry.js" ||
+                proc.filename === "tools/telemetry.js" ||
+                proc.filename.endsWith("telemetry.js")
+            )) {
                 totalKept++;
                 ns.print(`✅ [${server}] KEPT: ${proc.filename} (PID: ${proc.pid})`);
                 continue;
