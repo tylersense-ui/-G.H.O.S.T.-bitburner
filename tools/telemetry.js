@@ -11,28 +11,19 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /tools/telemetry.js
- * @version     0.1.0
+ * @version     0.2.1
  * @author      Claude (Godlike AI Operator)
  * @description Daemon de monitoring permanent - L'Œil de Claude
- *              Log network, performance, player stats, versions
- *              Survit au global-kill, sauvegarde JSON dans /state/
+ *              HOTFIX: Dépréciations corrigées
  * 
  * @usage
  *   run /tools/telemetry.js
  *   run /tools/telemetry.js --debug 2
- *   run /tools/telemetry.js --interval 60000
- * 
- * @commands
- *   --debug <0-3>     Niveau de verbosité (défaut: 1)
- *   --interval <ms>   Intervalle update en ms (défaut: 30000)
  * 
  * @changelog
- *   v0.1.0 - 2025-01-XX - G.H.O.S.T. Initial release
- *            - Renamed from NEXUS telemetry-daemon.js
- *            - Intégration système DEBUG multi-niveaux
- *            - Toast notifications pour événements critiques
- *            - 6 modules: network, performance, player, versions, batcher, heartbeat
- *            - Auto-tail + couleurs + icônes
+ *   v0.2.1 - 2025-01-XX - HOTFIX: Dépréciations corrigées
+ *            - FIX: ns.getTimeSinceLastAug() → Date.now() - ns.getResetInfo().lastAugReset
+ *   v0.1.0 - 2025-01-XX - Initial release
  */
 
 import { StateManager } from "/lib/state-manager.js";
@@ -55,7 +46,7 @@ export async function main(ns) {
     // ═══════════════════════════════════════════════════════════════════
     // HEADER
     // ═══════════════════════════════════════════════════════════════════
-    debug.header("👁️  TELEMETRY DAEMON v0.1.0");
+    debug.header("👁️  TELEMETRY DAEMON v0.2.1");
     debug.normal("");
     debug.normal("🔒 Protection: Exception global-kill");
     debug.normal(`⏱️  Update interval: ${updateInterval/1000}s`);
@@ -82,9 +73,9 @@ export async function main(ns) {
         debug.verbose(`⏰ Time: ${new Date().toISOString()}`);
         debug.verbose("");
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         // 1️⃣ NETWORK STATUS
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         debug.ultra("🌐 Collecting network status...");
         const networkStatus = collectNetworkStatus(ns, debug);
         await stateMgr.save("network-status.json", networkStatus);
@@ -96,9 +87,9 @@ export async function main(ns) {
         debug.ultra(`   RAM: ${ns.formatNumber(networkStatus.totalRamUsed)}/${ns.formatNumber(networkStatus.totalRamNetwork)} GB`);
         debug.verbose("");
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         // 2️⃣ PERFORMANCE METRICS
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         debug.ultra("⚡ Collecting performance metrics...");
         const perfMetrics = collectPerformanceMetrics(ns, debug);
         await stateMgr.save("performance-metrics.json", perfMetrics);
@@ -108,9 +99,9 @@ export async function main(ns) {
         debug.verbose(`📈 Revenue: $${ns.formatNumber(perfMetrics.revenuePerSecond || 0)}/s`);
         debug.verbose("");
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         // 3️⃣ PLAYER STATS
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         debug.ultra("🎯 Collecting player stats...");
         const playerStats = collectPlayerStats(ns, debug);
         await stateMgr.save("player-stats.json", playerStats);
@@ -119,9 +110,9 @@ export async function main(ns) {
         debug.verbose(`📡 BitNode: ${playerStats.currentBitNode}`);
         debug.verbose("");
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         // 4️⃣ VERSION TRACKING
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         debug.ultra("📦 Collecting version info...");
         const versionInfo = collectVersionInfo(ns, debug);
         await stateMgr.save("version-tracking.json", versionInfo);
@@ -134,14 +125,18 @@ export async function main(ns) {
             debug.verbose("");
         }
         
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
         // 5️⃣ HEARTBEAT
-        // ═══════════════════════════════════════════════════════════════
+        // ═══════════════════════════════════════════════════════════
+        // ✅ FIX v0.2.1: Date.now() - ns.getResetInfo().lastAugReset
+        const resetInfo = ns.getResetInfo();
+        const uptime = Date.now() - resetInfo.lastAugReset;
+        
         await stateMgr.save("daemon-heartbeat.json", {
             timestamp: new Date().toISOString(),
             cycle: cycle,
             pid: ns.pid,
-            uptime: ns.getTimeSinceLastAug()
+            uptime: uptime
         });
         
         const elapsed = debug.endTimer(startTime, "Telemetry cycle", Debug.VERBOSE);
@@ -258,11 +253,15 @@ function collectPerformanceMetrics(ns, debug) {
 }
 
 function collectPlayerStats(ns, debug) {
+    // ✅ FIX v0.2.1: Date.now() - ns.getResetInfo().lastAugReset
+    const resetInfo = ns.getResetInfo();
+    const timeSinceLastAug = Date.now() - resetInfo.lastAugReset;
+    
     return {
         timestamp: new Date().toISOString(),
         hackingLevel: ns.getHackingLevel(),
         currentBitNode: "BN-1", // Placeholder
-        timeSinceLastAug: ns.getTimeSinceLastAug(),
+        timeSinceLastAug: timeSinceLastAug,
         homeRamMax: ns.getServerMaxRam("home"),
         homeRamUsed: ns.getServerUsedRam("home"),
         purchasedServers: ns.getPurchasedServers().length
