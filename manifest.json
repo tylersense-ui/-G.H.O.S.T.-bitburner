@@ -10,12 +10,22 @@
   "files": {
     "core": [
       "/boot.js",
+      "/core/auto-spider.js",
+      "/core/deploy-workers.js",
       "/core/spider.js",
-      "/core/deploy-workers.js"
+      "/core/target-selector.js"
     ],
     "lib": [
-      "/lib/state-manager.js",
-      "/lib/debug.js"
+      "/lib/capabilities.js",
+      "/lib/constants.js",
+      "/lib/debug.js",
+      "/lib/formulas-helper.js",
+      "/lib/logger.js",
+      "/lib\network.js",
+      "/lib/state-manager.js"
+    ],
+    "managers": [
+      "/managers/server-manager.js"
     ],
     "workers": [
       "/workers/hack.js",
@@ -23,9 +33,10 @@
       "/workers/weaken.js"
     ],
     "tools": [
-      "/tools/telemetry.js",
       "/tools/blackbox.js",
-      "/tools/log-action.js"
+      "/tools/global-kill.js",
+      "/tools/log-action.js",
+      "/tools/telemetry.js"
     ],
     "deployment": [
       "/deploy-ghost.js",
