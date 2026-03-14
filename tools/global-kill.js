@@ -11,7 +11,7 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /tools/global-kill.js
- * @version     0.2.1
+ * @version     0.3.2
  * @author      Claude (Godlike AI Operator)
  * @description Killall intelligent - Tue TOUT sauf telemetry
  *              Scan TOUS les serveurs (home + purchased + réseau)
@@ -24,6 +24,10 @@
  *   --keep-telemetry <bool>   Garder telemetry ? (défaut: true)
  * 
  * @changelog
+ *   v0.3.2 - 2025-01-XX - HOTFIX: Scan purchased servers
+ *            - FIX: scanNetwork inclut purchased servers maintenant
+ *   v0.3.1 - 2025-01-XX - HOTFIX: Telemetry exclusion robuste
+ *            - FIX: Check 3 formats de chemin telemetry.js
  *   v0.2.1 - 2025-01-XX - G.H.O.S.T. v0.2.1 Hotfix
  *            - NEW: Killall intelligent avec exclusions
  *            - Scan réseau complet (BFS)
@@ -119,8 +123,10 @@ export async function main(ns) {
 // HELPER: SCAN NETWORK (BFS)
 // ═══════════════════════════════════════════════════════════════════════
 function scanNetwork(ns) {
-    const servers = ["home"];
-    const visited = new Set(["home"]);
+    // v0.3.2 FIX: Include purchased servers
+    const purchasedServers = ns.getPurchasedServers();
+    const servers = ["home", ...purchasedServers];
+    const visited = new Set(["home", ...purchasedServers]);
     
     for (let i = 0; i < servers.length; i++) {
         const host = servers[i];
