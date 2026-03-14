@@ -11,16 +11,17 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /tools/telemetry.js
- * @version     0.2.1
+ * @version     0.3.2
  * @author      Claude (Godlike AI Operator)
  * @description Daemon de monitoring permanent - L'Œil de Claude
- *              HOTFIX: Dépréciations corrigées
+ *              HOTFIX: Liste complète fichiers framework (17 files)
  * 
  * @usage
  *   run /tools/telemetry.js
  *   run /tools/telemetry.js --debug 2
  * 
  * @changelog
+ *   v0.3.2 - 2025-01-XX - HOTFIX: Liste complète fichiers v0.3.0
  *   v0.2.1 - 2025-01-XX - HOTFIX: Dépréciations corrigées
  *            - FIX: ns.getTimeSinceLastAug() → Date.now() - ns.getResetInfo().lastAugReset
  *   v0.1.0 - 2025-01-XX - Initial release
@@ -269,14 +270,25 @@ function collectPlayerStats(ns, debug) {
 }
 
 function collectVersionInfo(ns, debug) {
+    // v0.3.2: Liste complète des fichiers framework
     const files = [
         "/boot.js",
         "/core/spider.js",
         "/core/deploy-workers.js",
+        "/core/auto-spider.js",
+        "/core/target-selector.js",
         "/lib/state-manager.js",
         "/lib/debug.js",
+        "/lib/capabilities.js",
+        "/lib/constants.js",
+        "/lib/formulas-helper.js",
+        "/lib/logger.js",
+        "/lib/network.js",
+        "/managers/server-manager.js",
         "/tools/telemetry.js",
-        "/tools/blackbox.js"
+        "/tools/blackbox.js",
+        "/tools/global-kill.js",
+        "/tools/log-action.js"
     ];
     
     const versions = {};
@@ -284,7 +296,7 @@ function collectVersionInfo(ns, debug) {
     for (const file of files) {
         if (ns.fileExists(file)) {
             const content = ns.read(file);
-            const match = content.match(/v([\d.]+)/);
+            const match = content.match(/@version\s+([\d.]+)/);
             versions[file] = match ? match[1] : "unknown";
         }
     }

@@ -11,7 +11,7 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /managers/server-manager.js
- * @version     0.3.1
+ * @version     0.3.2
  * @author      Claude (Godlike AI Operator)
  * @description Gestionnaire automatique purchased servers Matrix
  *              Achète et upgrade servers avec noms Matrix stylés
@@ -46,6 +46,7 @@
  *   8GB → 16GB → 32GB → 64GB → 128GB → 256GB → 512GB → 1TB
  * 
  * @changelog
+ *   v0.3.2 - 2025-01-XX - HOTFIX: MAX_RAM constant added
  *   v0.3.1 - 2025-01-XX - HOTFIX: Auto-stop quand tous serveurs maxés
  *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
  *            - NEW: Auto-achat purchased servers
@@ -63,6 +64,7 @@ const DEFAULT_DEBUG = 1;
 
 const MAX_SERVERS = 25;
 const MIN_RAM = 8; // GB minimum purchase
+const MAX_RAM = 1024; // GB maximum upgrade
 const PURCHASE_COST_8GB = 55000;
 
 // Matrix-themed server names (25 total)
