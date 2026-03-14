@@ -36,17 +36,14 @@
  * 
  * @changelog
  *   v0.3.1 - 2025-01-XX - HOTFIX: profitPerSecond support
- *   v0.2.0 - 2025-01-XX - G.H.O.S.T. Trinity Matrix
- *   v0.1.0 - 2025-01-XX - Initial release
- */
- * 
- * @changelog
  *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
  *            - NEW: Daemon automatique re-root
  *            - Cycle 5 minutes (configurable)
  *            - Détection changements réseau
  *            - Redéploiement automatique workers
  *            - Intégration target-selector
+ *   v0.1.0 - 2025-01-XX - Initial release.
+ * 
  */
 
 import { StateManager } from "/lib/state-manager.js";

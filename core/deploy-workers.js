@@ -28,10 +28,7 @@
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
  * @changelog
- *   v0.3.1 - 2025-01-XX - HOTFIX: profitPerSecond support
- *   v0.2.0 - 2025-01-XX - Auto-target depuis best-target.json
- *   v0.1.0 - 2025-01-XX - Initial release
- */
+ *   v0.3.1 - 2025-01-XX - HOTFIX: profitPerSecond support *
  *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
  *            - MODIFIED: Auto-target depuis best-target.json
  *            - Fallback n00dles si aucune target
