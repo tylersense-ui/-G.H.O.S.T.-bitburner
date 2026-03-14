@@ -11,3 +11,16 @@ Set alias player-stats="cat state/player-stats.json"
 Set alias operator="cat state/operator-actions.json"
 
 
+
+  "Bypass",
+  "PrototypeTampering",
+  "Unclickable",
+  "UndocumentedFunctionCall",
+  "TimeCompression",
+  "RealityAlteration",
+  "N00dles",
+  "YoureNotMeantToAccessThis",
+  "TrueRecursion",
+  "INeedARainbow",
+  "EditSaveFile",
+

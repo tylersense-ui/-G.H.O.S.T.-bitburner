@@ -11,36 +11,31 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/target-selector.js
- * @version     0.2.0
+ * @version     0.3.0
  * @author      Claude (Godlike AI Operator)
- * @description Sélecteur intelligent de cible optimale
- *              Analyse tous les serveurs rootés et calcule scores
- *              Sauvegarde best target dans /state/best-target.json
+ * @description Sélecteur intelligent - TRI PAR PROFIT/S !
+ *              REFONTE v0.3.0: Utilise network.js (profit/s > score)
  * 
  * @usage
  *   run /core/target-selector.js
  *   run /core/target-selector.js --debug 2
  * 
- * @commands
- *   --debug <0-3>   Niveau de verbosité (défaut: 1)
- * 
  * @algorithm
- *   score = (maxMoney/1M) * 0.4      // 40% poids argent
- *         + (100/hackTime) * 0.3     // 30% poids vitesse
- *         + (hackChance) * 0.2       // 20% poids probabilité
- *         + (100/securityLevel) * 0.1 // 10% poids sécurité
+ *   profit/s = (maxMoney × hackPercent × hackChance) / hackTime
+ *   TRI: Plus haut profit/s en premier
  * 
  * @changelog
- *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
- *            - NEW: Algorithme scoring intelligent
- *            - Analyse tous serveurs rootés
- *            - Filtre par hack level requis
- *            - Sauvegarde best-target.json
- *            - Système DEBUG intégré
+ *   v0.3.0 - 2025-01-XX - G.H.O.S.T. v0.3.0 NEXUS Fusion
+ *            - REFONTE: Utilise network.js au lieu de score custom
+ *            - TRI PAR PROFIT/SECONDE (game changer!)
+ *            - Intégration capabilities.js
+ *   v0.2.0 - 2025-01-XX - Initial (score custom)
  */
 
 import { StateManager } from "/lib/state-manager.js";
 import { Debug } from "/lib/debug.js";
+import { Capabilities } from "/lib/capabilities.js";
+import { Network } from "/lib/network.js";
 
 const DEFAULT_DEBUG = 1;
 
@@ -53,147 +48,89 @@ export async function main(ns) {
     const debug = new Debug(ns, debugLevel);
     const stateMgr = new StateManager(ns);
     
-    debug.header("🎯 TARGET SELECTOR v0.2.0");
+    debug.header("🎯 TARGET SELECTOR v0.3.0 - PROFIT/S");
     debug.normal("");
     
     const startTime = debug.startTimer();
     
     // ═══════════════════════════════════════════════════════════════════
-    // SCAN NETWORK
+    // INIT CAPABILITIES & NETWORK
     // ═══════════════════════════════════════════════════════════════════
-    debug.verbose("🌐 Scanning network...");
-    const servers = scanNetwork(ns, debug);
+    debug.verbose("🔍 Scanning capabilities...");
+    const caps = new Capabilities(ns);
+    
+    debug.verbose("🌐 Refreshing network...");
+    const network = new Network(ns, caps);
+    const servers = network.refresh(true);
+    
     debug.normal(`🌐 Found ${servers.length} servers`);
-    
-    // Filter: only rooted servers with money
-    const candidates = servers.filter(s => 
-        ns.hasRootAccess(s) && 
-        ns.getServerMaxMoney(s) > 0 &&
-        ns.getServerRequiredHackingLevel(s) <= ns.getHackingLevel()
-    );
-    
-    debug.normal(`✅ Candidates: ${candidates.length} servers`);
+    debug.normal(`📊 Hacking level: ${caps.hackingLevel}`);
     debug.verbose("");
     
-    if (candidates.length === 0) {
-        debug.normal("⚠️  No valid candidates - keeping default target");
+    // ═══════════════════════════════════════════════════════════════════
+    // GET TOP TARGETS (PROFIT/S)
+    // ═══════════════════════════════════════════════════════════════════
+    debug.verbose("💰 Calculating profit/s for all targets...");
+    const topTargets = network.getTopTargets(5);
+    
+    if (topTargets.length === 0) {
+        debug.normal("⚠️  No valid targets found");
         debug.toastWarning("No targets available");
         return;
     }
     
-    // ═══════════════════════════════════════════════════════════════════
-    // ANALYZE & SCORE
-    // ═══════════════════════════════════════════════════════════════════
-    debug.verbose("📊 Analyzing candidates...");
-    
-    const analyses = [];
-    
-    for (const server of candidates) {
-        const analysis = analyzeServer(ns, server, debug);
-        analyses.push(analysis);
-        
-        debug.ultra(`   ${server}: score=${analysis.score.toFixed(2)}`);
-    }
-    
-    // Sort by score (descending)
-    analyses.sort((a, b) => b.score - a.score);
-    
     // Best target
-    const best = analyses[0];
+    const bestTarget = topTargets[0];
+    const metrics = network.getTargetMetrics(bestTarget);
     
     debug.normal("");
     debug.separator();
-    debug.normal("🏆 BEST TARGET FOUND:");
-    debug.normal(`   Hostname: ${best.hostname}`);
-    debug.normal(`   Score: ${best.score.toFixed(2)}`);
-    debug.money(best.maxMoney, "Max Money");
-    debug.normal(`   Hack Time: ${ns.formatNumber(best.hackTime)}s`);
-    debug.normal(`   Hack Chance: ${(best.hackChance * 100).toFixed(1)}%`);
-    debug.normal(`   Security: ${best.securityLevel.toFixed(1)}`);
+    debug.normal("🏆 BEST TARGET (PROFIT/S):");
+    debug.normal(`   Hostname: ${bestTarget}`);
+    debug.money(metrics.maxMoney, "Max Money");
+    debug.normal(`   Hack Time: ${ns.formatNumber(metrics.hackTime)}ms`);
+    debug.normal(`   Hack Chance: ${(metrics.hackChance * 100).toFixed(1)}%`);
+    debug.normal(`   💰 Profit/s: $${ns.formatNumber(metrics.profitPerSecond)}/s`);
     debug.separator();
     debug.normal("");
+    
+    // Show top 5
+    if (debugLevel >= Debug.VERBOSE) {
+        debug.verbose("📊 TOP 5 TARGETS:");
+        for (let i = 0; i < topTargets.length; i++) {
+            const target = topTargets[i];
+            const m = network.getTargetMetrics(target);
+            debug.verbose(`   ${i+1}. ${target}: $${ns.formatNumber(m.profitPerSecond)}/s`);
+        }
+        debug.verbose("");
+    }
     
     // ═══════════════════════════════════════════════════════════════════
     // SAVE TO STATE
     // ═══════════════════════════════════════════════════════════════════
-    const bestTarget = {
+    const bestTargetData = {
         timestamp: new Date().toISOString(),
-        target: best.hostname,
-        score: best.score,
-        maxMoney: best.maxMoney,
-        hackTime: best.hackTime,
-        hackChance: best.hackChance,
-        securityLevel: best.securityLevel,
-        reason: "Optimal money/time/chance ratio",
-        topCandidates: analyses.slice(0, 5).map(a => ({
-            hostname: a.hostname,
-            score: a.score
-        }))
+        target: bestTarget,
+        profitPerSecond: metrics.profitPerSecond,
+        maxMoney: metrics.maxMoney,
+        hackTime: metrics.hackTime,
+        hackChance: metrics.hackChance,
+        securityLevel: metrics.currentSec,
+        reason: "Highest profit/second (v0.3.0 algorithm)",
+        topCandidates: topTargets.slice(0, 5).map(t => {
+            const tm = network.getTargetMetrics(t);
+            return {
+                hostname: t,
+                profitPerSecond: tm.profitPerSecond
+            };
+        })
     };
     
-    await stateMgr.save("best-target.json", bestTarget);
+    await stateMgr.save("best-target.json", bestTargetData);
     
     debug.normal("💾 Best target saved to /state/best-target.json");
     
     const elapsed = debug.endTimer(startTime, "Target selection", Debug.NORMAL);
     
-    debug.toastSuccess(`Best target: ${best.hostname} (score: ${best.score.toFixed(1)})`);
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// HELPER: SCAN NETWORK
-// ═══════════════════════════════════════════════════════════════════════
-function scanNetwork(ns, debug) {
-    const servers = ["home"];
-    const visited = new Set(["home"]);
-    
-    for (let i = 0; i < servers.length; i++) {
-        const host = servers[i];
-        const neighbors = ns.scan(host);
-        
-        for (const neighbor of neighbors) {
-            if (!visited.has(neighbor)) {
-                visited.add(neighbor);
-                servers.push(neighbor);
-            }
-        }
-    }
-    
-    return servers;
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// HELPER: ANALYZE SERVER
-// ═══════════════════════════════════════════════════════════════════════
-function analyzeServer(ns, hostname, debug) {
-    const maxMoney = ns.getServerMaxMoney(hostname);
-    const hackTime = ns.getHackTime(hostname);
-    const hackChance = ns.hackAnalyzeChance(hostname);
-    const securityLevel = ns.getServerSecurityLevel(hostname);
-    
-    // Score algorithm:
-    // - 40% weight on money potential
-    // - 30% weight on speed (lower hack time)
-    // - 20% weight on success chance
-    // - 10% weight on security (lower is better)
-    
-    const moneyScore = (maxMoney / 1000000) * 0.4;
-    const speedScore = (100 / (hackTime / 1000)) * 0.3;
-    const chanceScore = hackChance * 0.2;
-    const securityScore = (100 / securityLevel) * 0.1;
-    
-    const totalScore = moneyScore + speedScore + chanceScore + securityScore;
-    
-    return {
-        hostname: hostname,
-        score: totalScore,
-        maxMoney: maxMoney,
-        hackTime: hackTime / 1000, // Convert to seconds
-        hackChance: hackChance,
-        securityLevel: securityLevel,
-        moneyScore: moneyScore,
-        speedScore: speedScore,
-        chanceScore: chanceScore,
-        securityScore: securityScore
-    };
+    debug.toastSuccess(`Best target: ${bestTarget} ($${ns.formatNumber(metrics.profitPerSecond)}/s)`);
 }
