@@ -11,11 +11,11 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /boot.js
- * @version     0.3.3.3
+ * @version     0.3.3.4
  * @author      Claude (Godlike AI Operator)
  * @description Point d'entrée G.H.O.S.T. Framework
- *              ULTRA-MINIMAL: Lance daemons puis EXIT!
- *              Auto-Spider fait TOUT (spider + target + deploy)
+ *              ULTRA-SIMPLE: Auto-Spider + Server-Manager + EXIT
+ *              Telemetry & BlackBox: launch manual
  * 
  * @usage
  *   run /boot.js
@@ -24,32 +24,37 @@
  * @commands
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @architecture_v0.3.3.3
- *   Boot.js (4.40GB - mais EXIT rapide!):
- *     STEP 1: Launch Telemetry daemon
- *     STEP 2: Launch Auto-Spider daemon  ← FAIT TOUT!
- *     STEP 3: Launch Server Manager daemon
- *     STEP 4: Launch BlackBox (si RAM)
- *     STEP 5: EXIT (libère 4.40GB!)
+ * @architecture_v0.3.3.4
+ *   Boot.js (minimal RAM - EXIT rapide!):
+ *     STEP 1: Launch Auto-Spider daemon  ← FAIT TOUT!
+ *     STEP 2: Launch Server Manager daemon
+ *     STEP 3: EXIT (libère boot.js RAM!)
  *   
- *   Auto-Spider cycle 1 (avec 6.5GB libres!):
+ *   Auto-Spider cycle 1 (avec ~7GB libres!):
  *     - Spider (2.35GB) ✅
  *     - Target-selector (5.70GB) ✅ RAM suffisante!
  *     - Deploy-workers (5.60GB) ✅
  *     - Quantum sync...
  * 
- * @innovation_v0.3.3.3
- *   - Boot EXIT rapide → libère 4.40GB
- *   - Auto-Spider a toute la RAM pour cycle 1
- *   - Plus de problème RAM au boot!
- *   - Architecture daemon propre
+ * @manual_launch
+ *   Telemetry (5.75GB): run tools/telemetry.js
+ *   BlackBox (22.5GB): run tools/blackbox.js
+ * 
+ * @innovation_v0.3.3.4
+ *   - Boot ULTRA-SIMPLE: 2 daemons + exit
+ *   - Telemetry skipped (manual launch)
+ *   - BlackBox skipped (manual launch)
+ *   - Auto-spider has ~7GB free for cycle 1
+ *   - Résout définitivement problème RAM 8GB
  * 
  * @changelog
+ *   v0.3.3.4 - 2026-03-14 - ULTRA-SIMPLE BOOT
+ *            - Telemetry removed (5.75GB saved!)
+ *            - BlackBox removed (22.5GB saved!)
+ *            - Boot = auto-spider + server-manager only
+ *            - ~7GB free pour auto-spider cycle 1
+ *            - Manual launch: telemetry + blackbox
  *   v0.3.3.3 - 2026-03-14 - ULTRA-MINIMAL BOOT
- *            - Boot lance UNIQUEMENT daemons (pas de wait!)
- *            - EXIT immédiat après launch (libère 4.40GB)
- *            - Auto-spider fait spider + target + deploy
- *            - Résout définitivement problème RAM 8GB
  *   v0.3.3.2 - 2026-03-14 - EARLY GAME FIX
  *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
@@ -84,37 +89,22 @@ export async function main(ns) {
     debug.normal("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝             ║");
     debug.normal("║                                                        ║");
     debug.normal("║  Godlike Heuristic Operator & Strategy Toolkit        ║");
-    debug.normal("║  v0.3.3.3 - ULTRA-MINIMAL BOOT                        ║");
+    debug.normal("║  v0.3.3.4 - ULTRA-SIMPLE (8GB optimized)              ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
-    debug.normal("🚀 Boot: ULTRA-MINIMAL (exit rapide = RAM freed!)");
-    debug.normal("⚡ Auto-Spider: Does EVERYTHING in cycle 1");
-    debug.normal("🎯 Architecture: Daemon-only, ultra-efficient");
+    debug.normal("🚀 Boot: ULTRA-SIMPLE (2 daemons + exit)");
+    debug.normal("⚡ Auto-Spider: Does spider + target + deploy");
+    debug.normal("🎯 Manual: Telemetry + BlackBox (optional)");
     debug.normal("");
     
     await ns.sleep(500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 1: TELEMETRY DAEMON
+    // STEP 1: AUTO-SPIDER DAEMON (FAIT TOUT!)
     // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 1/4: Telemetry daemon...");
-    
-    const telemetryArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const telemetryPid = ns.exec("/tools/telemetry.js", "home", 1, ...telemetryArgs);
-    
-    if (telemetryPid > 0) {
-        debug.normal("   ✅ Telemetry launched (PID: " + telemetryPid + ")");
-    } else {
-        debug.verbose("   ⚠️  Telemetry already running");
-    }
-    
-    await ns.sleep(300);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 2: AUTO-SPIDER DAEMON (FAIT TOUT!)
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 2/4: Auto-Spider daemon (quantum sync)...");
-    debug.verbose("   (Cycle 1 will: spider + target-selector + deploy)");
+    debug.normal("STEP 1/2: Auto-Spider daemon (quantum sync)...");
+    debug.verbose("   Cycle 1: spider + target + deploy");
+    debug.verbose("   Cycles 2+: quantum sync (instant reactivity)");
     
     const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
     const autoSpiderPid = ns.exec("/core/auto-spider.js", "home", 1, ...autoSpiderArgs);
@@ -129,9 +119,9 @@ export async function main(ns) {
     await ns.sleep(300);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 3: SERVER MANAGER DAEMON
+    // STEP 2: SERVER MANAGER DAEMON
     // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 3/4: Server Manager daemon...");
+    debug.normal("STEP 2/2: Server Manager daemon...");
     
     const serverMgrArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
     const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1, ...serverMgrArgs);
@@ -146,39 +136,11 @@ export async function main(ns) {
     await ns.sleep(300);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 4: BLACKBOX (OPTIONAL)
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 4/4: BlackBox (optional)...");
-    
-    const homeMaxRam = ns.getServerMaxRam("home");
-    const homeUsedRam = ns.getServerUsedRam("home");
-    const homeAvailRam = homeMaxRam - homeUsedRam;
-    
-    const blackboxRam = 22.5;
-    
-    if (homeAvailRam >= blackboxRam) {
-        const blackboxArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-        const blackboxPid = ns.exec("/tools/blackbox.js", "home", 1, ...blackboxArgs);
-        
-        if (blackboxPid > 0) {
-            debug.normal("   ✅ BlackBox launched (PID: " + blackboxPid + ")");
-            debug.toastInfo("🎲 BlackBox active");
-        } else {
-            debug.verbose("   ⚠️  BlackBox already running");
-        }
-    } else {
-        debug.verbose("   ⚠️  Insufficient RAM (need " + blackboxRam + "GB)");
-        debug.verbose("   Will launch after home RAM upgrade");
-    }
-    
-    await ns.sleep(300);
-    
-    // ═══════════════════════════════════════════════════════════════════
     // BOOT COMPLETE - EXIT IMMÉDIATEMENT!
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("");
     debug.separator();
-    debug.normal("🎉 G.H.O.S.T. v0.3.3.3 - DAEMONS LAUNCHED!");
+    debug.normal("🎉 G.H.O.S.T. v0.3.3.4 - ULTRA-SIMPLE - BOOT COMPLETE!");
     debug.normal("");
     debug.normal("🕷️  Auto-Spider : Cycle 1 starting now...");
     debug.normal("   → Spider (root network)");
@@ -187,21 +149,21 @@ export async function main(ns) {
     debug.normal("   → Quantum sync (zero downtime)");
     debug.normal("");
     debug.normal("💻 Server Manager : Purchasing/upgrading Matrix servers");
-    debug.normal("👁️  Telemetry : Monitoring network");
-    if (homeAvailRam >= blackboxRam) {
-        debug.normal("🎲 BlackBox : Solving contracts");
-    }
     debug.normal("");
-    debug.normal("⚡ Boot.js exiting → freeing 4.40GB RAM for Auto-Spider!");
-    debug.normal("📊 Auto-Spider will have ~6.5GB free for cycle 1");
+    debug.normal("📋 MANUAL LAUNCH (optional):");
+    debug.normal("   Telemetry : run tools/telemetry.js");
+    debug.normal("   BlackBox  : run tools/blackbox.js");
+    debug.normal("");
+    debug.normal("⚡ Boot.js exiting → freeing RAM for Auto-Spider!");
+    debug.normal("📊 Auto-Spider will have ~7GB free for cycle 1");
     debug.separator();
     debug.normal("");
-    debug.normal("💰 Framework optimized for home 8GB → infinity");
+    debug.normal("💰 Framework optimized for home 8GB");
     debug.normal("🚀 Tail /core/auto-spider.js to watch cycle 1!");
     
-    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3.3 online!");
+    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3.4 online!");
     
     await ns.sleep(1000);
     
-    // EXIT → libère 4.40GB!
+    // EXIT → libère boot.js RAM!
 }
