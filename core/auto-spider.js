@@ -11,11 +11,11 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/auto-spider.js
- * @version     0.3.3.1
+ * @version     0.3.3.3
  * @author      Claude (Godlike AI Operator)
- * @description QUANTUM SYNC Auto-Spider - Synchronisation intelligente
- *              Sync avec FIN des jobs (zéro temps mort!)
- *              90% sleep estimé + 10% surveillance active
+ * @description QUANTUM SYNC Auto-Spider - FAIT TOUT!
+ *              Cycle 1: Spider + Target + Deploy (FORCE)
+ *              Cycles suivants: Quantum sync (instant reactivity)
  * 
  * @usage
  *   run /core/auto-spider.js
@@ -24,37 +24,35 @@
  * @commands
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @innovation_quantum_sync
- *   AVANT (cycles fixes 5min):
- *   - Workers finissent à T=2min
- *   - Auto-Spider attend jusqu'à T=5min (3min perdues!)
- *   - 40% du temps en IDLE (gaspillage)
- * 
- *   APRÈS (sync intelligent):
- *   - Workers finissent à T=2min
- *   - Auto-Spider détecte → cycle immédiat!
- *   - 0% idle, 100% productif
- *   - 2.5x plus de cycles dans le même temps
+ * @innovation_v0.3.3.3
+ *   CYCLE 1 (boot.js vient de lancer):
+ *   - Spider (root network avec 6.5GB libres!)
+ *   - Target-selector (5.70GB requis - OK!)
+ *   - Deploy-workers (5.60GB requis - OK!)
+ *   
+ *   CYCLES SUIVANTS (quantum sync):
+ *   - Spider (check nouveaux serveurs)
+ *   - Target-selector (recalcule best target)
+ *   - Deploy si nouveaux serveurs
+ *   - Smart wait (90% sleep + 10% monitoring)
+ *   - Instant restart dès que workers finissent
  * 
  * @workflow_quantum
  *   1. Spider (auto-root nouveaux serveurs)
  *   2. Target Selector (recalcule meilleure cible)
- *   3. Deploy Workers (si nouveaux serveurs)
- *   4. SMART WAIT (innovation!):
+ *   3. Deploy Workers (cycle 1 FORCE, autres si nouveaux)
+ *   4. SMART WAIT:
  *      - Sleep 90% du weaken time estimé
  *      - Surveillance active derniers 10%
  *      - Cycle immédiat dès que workers finissent
  * 
  * @changelog
- *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec (home = racine)
- *            - FIX: ns.exec() plus fiable pour lancer scripts
- *            - FIX: ns.isRunning(pid, "home") avec host explicite
+ *   v0.3.3.3 - 2026-03-14 - ULTRA-MINIMAL BOOT SUPPORT
+ *            - Cycle 1: FORCE deploy (même si newServers = 0)
+ *            - Boot.js exit libère RAM pour cycle 1
+ *            - Spider + Target + Deploy garanti au cycle 1
+ *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
- *            - INNOVATION: Sync avec fin des jobs (zéro downtime)
- *            - Hybride: 90% sleep + 10% surveillance active
- *            - hasActiveWorkers() detection
- *            - Cycle immédiat après fin jobs
- *            - 2.5x plus de cycles vs v0.2.0
  *   v0.2.0 - 2026-03-13 - G.H.O.S.T. Trinity Matrix
  *   v0.1.0 - 2026-03-08 - Initial release
  */
@@ -76,11 +74,11 @@ export async function main(ns) {
     
     ns.ui.openTail();
     debug.clear();
-    debug.header("🕷️ AUTO-SPIDER v0.3.3 - QUANTUM SYNC");
+    debug.header("🕷️ AUTO-SPIDER v0.3.3.3 - QUANTUM SYNC");
     debug.normal("");
-    debug.normal("⚡ Innovation: Sync intelligent avec fin des jobs");
+    debug.normal("⚡ Cycle 1: Spider + Target + Deploy (FORCE)");
+    debug.normal("⚡ Cycles suivants: Quantum sync (instant)");
     debug.normal("🎯 Zero downtime, maximum reactivity");
-    debug.normal("🔄 Cycles optimisés pour revenue maximum");
     debug.normal("");
     debug.separator();
     
@@ -160,11 +158,19 @@ export async function main(ns) {
         debug.normal("");
         
         // ═══════════════════════════════════════════════════════════
-        // STEP 3: REDEPLOY IF NEW SERVERS
+        // STEP 3: DEPLOY WORKERS
+        // CYCLE 1: FORCE deploy (boot.js n'a rien déployé)
+        // AUTRES: Deploy seulement si nouveaux serveurs
         // ═══════════════════════════════════════════════════════════
-        if (newServers > 0 && bestTarget) {
+        const shouldDeploy = (cycle === 1) || (newServers > 0);
+        
+        if (shouldDeploy && bestTarget) {
             debug.verbose("═══════════════════════════════════════════════════════");
-            debug.verbose("STEP 3: REDEPLOY WORKERS (NEW SERVERS DETECTED)");
+            if (cycle === 1) {
+                debug.verbose("STEP 3: INITIAL DEPLOY (CYCLE 1 - FORCE)");
+            } else {
+                debug.verbose("STEP 3: REDEPLOY WORKERS (NEW SERVERS DETECTED)");
+            }
             debug.verbose("═══════════════════════════════════════════════════════");
             debug.verbose("");
             
@@ -174,13 +180,21 @@ export async function main(ns) {
                 while (ns.isRunning(deployPid, "home")) {
                     await ns.sleep(200);
                 }
+                
+                if (cycle === 1) {
+                    debug.normal(`✅ Initial workers deployed on all servers`);
+                    debug.toastSuccess(`📦 Workers deployed! Target: ${bestTarget.target}`);
+                } else {
+                    debug.normal(`✅ Workers redeployed on ${newServers} new servers`);
+                    debug.toastSuccess(`📦 ${newServers} servers now active!`);
+                }
+            } else {
+                debug.normal(`❌ Deploy failed (RAM insufficient or already running)`);
             }
             
-            debug.normal(`✅ Workers redeployed on ${newServers} new servers`);
-            debug.toastSuccess(`📦 ${newServers} servers now active!`);
             debug.normal("");
         } else {
-            debug.ultra("   No redeploy needed (no new servers)");
+            debug.ultra("   No deploy needed (cycle " + cycle + ", newServers " + newServers + ")");
             debug.ultra("");
         }
         
@@ -241,7 +255,11 @@ export async function main(ns) {
         debug.normal(`📊 Cycle ${cycle} complete:`);
         debug.normal(`   Total time: ${(cycleTime/1000).toFixed(1)}s`);
         debug.normal(`   Efficiency: ${efficiency}% (${checksCount} active checks)`);
-        debug.normal(`   Innovation: ${newServers} new servers, instant restart`);
+        if (cycle === 1) {
+            debug.normal(`   🎉 CYCLE 1 SUCCESS: Spider + Target + Deploy complete!`);
+        } else if (newServers > 0) {
+            debug.normal(`   Innovation: ${newServers} new servers, instant restart`);
+        }
         debug.separator();
         debug.normal("");
         debug.normal("🔄 Starting next cycle immediately...");
