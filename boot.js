@@ -11,7 +11,7 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /boot.js
- * @version     0.3.3
+ * @version     0.3.3.1
  * @author      Claude (Godlike AI Operator)
  * @description Point d'entrée G.H.O.S.T. Framework
  *              QUANTUM SYNC: Boot minimal, Auto-Spider intelligent
@@ -40,6 +40,9 @@
  *   - Plus de doublons possibles (logique unique)
  * 
  * @changelog
+ *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec (home = racine)
+ *            - FIX: ns.exec() plus fiable que ns.run()
+ *            - FIX: ns.isRunning(pid, "home") avec host explicite
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
  *            - REFONTE TOTALE: Boot minimal (Option A)
  *            - Auto-Spider intelligent (sync avec jobs)
@@ -80,7 +83,7 @@ export async function main(ns) {
     debug.normal("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝             ║");
     debug.normal("║                                                        ║");
     debug.normal("║  Godlike Heuristic Operator & Strategy Toolkit        ║");
-    debug.normal("║  v0.3.3 - QUANTUM SYNC EDITION                        ║");
+    debug.normal("║  v0.3.3.1 - QUANTUM SYNC (ns.exec fix)                ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     debug.normal("🚀 Boot Sequence: MINIMAL & INTELLIGENT");
@@ -129,12 +132,12 @@ export async function main(ns) {
         deployArgs.push("--debug", debugLevel);
     }
     
-    const deployPid = ns.run("/core/deploy-workers.js", 1, ...deployArgs);
+    const deployPid = ns.exec("/core/deploy-workers.js", "home", 1, ...deployArgs);
     
     if (deployPid > 0) {
         debug.normal("✅ Deploy workers launched...");
         
-        while (ns.isRunning(deployPid)) {
+        while (ns.isRunning(deployPid, "home")) {
             await ns.sleep(500);
         }
         

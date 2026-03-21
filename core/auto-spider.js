@@ -11,7 +11,7 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/auto-spider.js
- * @version     0.3.3
+ * @version     0.3.3.1
  * @author      Claude (Godlike AI Operator)
  * @description QUANTUM SYNC Auto-Spider - Synchronisation intelligente
  *              Sync avec FIN des jobs (zéro temps mort!)
@@ -46,6 +46,9 @@
  *      - Cycle immédiat dès que workers finissent
  * 
  * @changelog
+ *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec (home = racine)
+ *            - FIX: ns.exec() plus fiable pour lancer scripts
+ *            - FIX: ns.isRunning(pid, "home") avec host explicite
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
  *            - INNOVATION: Sync avec fin des jobs (zéro downtime)
  *            - Hybride: 90% sleep + 10% surveillance active
@@ -109,10 +112,10 @@ export async function main(ns) {
         
         const beforeRoot = countRootedServers(ns);
         
-        const spiderPid = ns.run("/core/spider.js", 1);
+        const spiderPid = ns.exec("/core/spider.js", "home", 1);
         if (spiderPid > 0) {
             debug.ultra("   🕷️ Spider launched, waiting...");
-            while (ns.isRunning(spiderPid)) {
+            while (ns.isRunning(spiderPid, "home")) {
                 await ns.sleep(200);
             }
         }
@@ -135,10 +138,10 @@ export async function main(ns) {
         debug.verbose("═══════════════════════════════════════════════════════");
         debug.verbose("");
         
-        const targetPid = ns.run("/core/target-selector.js", 1);
+        const targetPid = ns.exec("/core/target-selector.js", "home", 1);
         if (targetPid > 0) {
             debug.ultra("   🎯 Target selector launched, waiting...");
-            while (ns.isRunning(targetPid)) {
+            while (ns.isRunning(targetPid, "home")) {
                 await ns.sleep(200);
             }
         }
@@ -165,10 +168,10 @@ export async function main(ns) {
             debug.verbose("═══════════════════════════════════════════════════════");
             debug.verbose("");
             
-            const deployPid = ns.run("/core/deploy-workers.js", 1, bestTarget.target);
+            const deployPid = ns.exec("/core/deploy-workers.js", "home", 1, bestTarget.target);
             if (deployPid > 0) {
                 debug.ultra("   📦 Deploy workers launched, waiting...");
-                while (ns.isRunning(deployPid)) {
+                while (ns.isRunning(deployPid, "home")) {
                     await ns.sleep(200);
                 }
             }
