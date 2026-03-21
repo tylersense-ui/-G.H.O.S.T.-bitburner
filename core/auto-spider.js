@@ -11,11 +11,11 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/auto-spider.js
- * @version     0.3.3.5
+ * @version     0.3.3.6
  * @author      Claude (Godlike AI Operator)
- * @description QUANTUM SYNC Auto-Spider - FAIT TOUT!
- *              Cycle 1: Spider + Target + Deploy + Server-Manager
- *              Cycles suivants: Quantum sync (instant reactivity)
+ * @description QUANTUM SYNC Auto-Spider - DAEMON ∞
+ *              Cycle 1: Spider + Deploy (target déjà fait!)
+ *              Cycles 2+: Spider + Target + Deploy + Quantum sync
  * 
  * @usage
  *   run /core/auto-spider.js
@@ -24,31 +24,30 @@
  * @commands
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @innovation_v0.3.3.5
- *   CYCLE 1 (spawned by boot.js avec 8GB libres!):
- *   - Spider (root network)
- *   - Target-selector (5.70GB requis - OK!)
- *   - Deploy-workers (5.60GB requis - OK!)
- *   - Launch Server-Manager (daemon)
+ * @spawn_chain_v0.3.3.6
+ *   boot.js → target-selector.js → auto-spider.js
  *   
- *   CYCLES SUIVANTS (quantum sync):
- *   - Spider (check nouveaux serveurs)
- *   - Target-selector (recalcule best target)
- *   - Deploy si nouveaux serveurs
- *   - Smart wait (90% sleep + 10% monitoring)
- *   - Instant restart dès que workers finissent
+ *   Auto-spider:
+ *   - Spawned by target-selector.js (has 8GB free)
+ *   - Cycle 1: spider + deploy (SKIP target - already done!)
+ *   - Cycle 2+: spider + target + deploy + quantum sync
+ *   - RUNS FOREVER (daemon) until kill
  * 
  * @workflow_quantum
  *   1. Spider (auto-root nouveaux serveurs)
- *   2. Target Selector (recalcule meilleure cible)
+ *   2. Target Selector (recalcule best - SKIP cycle 1!)
  *   3. Deploy Workers (cycle 1 FORCE, autres si nouveaux)
- *   4. Launch Server Manager (cycle 1 only)
- *   5. SMART WAIT:
+ *   4. SMART WAIT:
  *      - Sleep 90% du weaken time estimé
  *      - Surveillance active derniers 10%
  *      - Cycle immédiat dès que workers finissent
  * 
  * @changelog
+ *   v0.3.3.6 - 2026-03-14 - SPAWN CHAIN + CLEAN
+ *            - Spawned by target-selector.js (spawn chain)
+ *            - Cycle 1 SKIP target (already created by spawn chain)
+ *            - Server-manager removed (ridicule level 1)
+ *            - DAEMON ∞ runs forever
  *   v0.3.3.5 - 2026-03-14 - ns.spawn() BOOT SUPPORT
  *            - Spawned by boot.js (has 8GB free!)
  *            - Cycle 1 STEP 4: Launch server-manager
@@ -80,7 +79,7 @@ export async function main(ns) {
     
     ns.ui.openTail();
     debug.clear();
-    debug.header("🕷️ AUTO-SPIDER v0.3.3.5 - QUANTUM SYNC");
+    debug.header("🕷️ AUTO-SPIDER v0.3.3.6 - QUANTUM SYNC");
     debug.normal("");
     debug.normal("⚡ Cycle 1: Spider + Target + Deploy (FORCE)");
     debug.normal("⚡ Cycles suivants: Quantum sync (instant)");
@@ -135,18 +134,28 @@ export async function main(ns) {
         debug.normal("");
         
         // ═══════════════════════════════════════════════════════════
-        // STEP 2: RUN TARGET SELECTOR
+        // STEP 2: RUN TARGET SELECTOR (SKIP SI CYCLE 1 + FICHIER EXISTE)
         // ═══════════════════════════════════════════════════════════
         debug.verbose("═══════════════════════════════════════════════════════");
         debug.verbose("STEP 2: TARGET SELECTOR (RECALCULATE BEST)");
         debug.verbose("═══════════════════════════════════════════════════════");
         debug.verbose("");
         
-        const targetPid = ns.exec("/core/target-selector.js", "home", 1);
-        if (targetPid > 0) {
-            debug.ultra("   🎯 Target selector launched, waiting...");
-            while (ns.isRunning(targetPid, "home")) {
-                await ns.sleep(200);
+        // Check si best-target.json existe déjà (spawn chain)
+        const existingTarget = stateMgr.load("best-target.json");
+        const shouldRunTarget = (cycle !== 1) || !existingTarget;
+        
+        if (cycle === 1 && existingTarget) {
+            debug.normal(`✅ Target already selected: ${existingTarget.target}`);
+            debug.normal(`   (Created by spawn chain - skipping target-selector)`);
+            debug.normal("");
+        } else {
+            const targetPid = ns.exec("/core/target-selector.js", "home", 1);
+            if (targetPid > 0) {
+                debug.ultra("   🎯 Target selector launched, waiting...");
+                while (ns.isRunning(targetPid, "home")) {
+                    await ns.sleep(200);
+                }
             }
         }
         
@@ -205,27 +214,7 @@ export async function main(ns) {
         }
         
         // ═══════════════════════════════════════════════════════════
-        // STEP 4: LAUNCH SERVER MANAGER (CYCLE 1 ONLY)
-        // ═══════════════════════════════════════════════════════════
-        if (cycle === 1) {
-            debug.verbose("═══════════════════════════════════════════════════════");
-            debug.verbose("STEP 4: LAUNCH SERVER MANAGER (CYCLE 1)");
-            debug.verbose("═══════════════════════════════════════════════════════");
-            debug.verbose("");
-            
-            const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1);
-            if (serverMgrPid > 0) {
-                debug.normal(`✅ Server Manager launched (PID: ${serverMgrPid})`);
-                debug.toastSuccess("💻 Matrix Manager online");
-            } else {
-                debug.verbose("   ⚠️  Server Manager already running or failed");
-            }
-            
-            debug.normal("");
-        }
-        
-        // ═══════════════════════════════════════════════════════════
-        // STEP 5: QUANTUM SYNC - SMART WAIT
+        // STEP 4: QUANTUM SYNC - SMART WAIT
         // ═══════════════════════════════════════════════════════════
         debug.separator();
         debug.normal("⚡ QUANTUM SYNC: Waiting for jobs to complete...");

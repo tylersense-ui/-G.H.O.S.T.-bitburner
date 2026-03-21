@@ -11,10 +11,10 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/target-selector.js
- * @version     0.3.3.2
+ * @version     0.3.3.6
  * @author      Claude (Godlike AI Operator)
- * @description Sélecteur intelligent - OPTIMISÉ RAM (5.20GB → 2.0GB)
- *              TRI PAR PROFIT/S - Logique inline (pas d'import Network)
+ * @description Sélecteur intelligent - OPTIMISÉ RAM (5.70GB)
+ *              TRI PAR PROFIT/S - Spawne auto-spider après
  * 
  * @usage
  *   run /core/target-selector.js
@@ -24,11 +24,19 @@
  *   profit/s = (maxMoney × hackPercent × hackChance) / hackTime
  *   TRI: Plus haut profit/s en premier
  * 
- * @optimization_v0.3.3.2
- *   AVANT: Import Network.js = 5.20GB RAM total
- *   APRÈS: Logique inline = 2.0GB RAM total (-60% RAM!)
+ * @spawn_chain_v0.3.3.6
+ *   boot.js → target-selector.js → auto-spider.js
+ *   
+ *   Target-selector:
+ *   - Spawned by boot.js (has 8GB free)
+ *   - Creates best-target.json
+ *   - Spawns auto-spider.js
+ *   - Exits (frees 5.70GB)
  * 
  * @changelog
+ *   v0.3.3.6 - 2026-03-14 - SPAWN CHAIN
+ *            - Spawns auto-spider.js after creating best-target.json
+ *            - Part of spawn chain: boot → target → auto-spider
  *   v0.3.3.2 - 2026-03-14 - RAM OPTIMIZATION
  *            - Inline logic (pas d'import Network.js)
  *            - 5.20GB → 2.0GB RAM (-60%!)
@@ -204,6 +212,41 @@ export async function main(ns) {
         const t = targetScores[i];
         ns.print(`   ${i + 1}. ${t.target.padEnd(20)} $${ns.formatNumber(t.profitPerSecond)}/s`);
     }
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // SPAWN AUTO-SPIDER (SPAWN CHAIN)
+    // ═══════════════════════════════════════════════════════════════════
+    ns.print("");
+    ns.print("═══════════════════════════════════════════════════════");
+    ns.print("🔗 SPAWN CHAIN: Launching Auto-Spider...");
+    ns.print("");
+    
+    await ns.sleep(1000);
+    
+    // Parse debug level from args
+    const debugArg = ns.args.find(arg => arg === "--debug");
+    const debugLevel = debugArg ? parseInt(ns.args[ns.args.indexOf("--debug") + 1]) : 1;
+    
+    const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
+    
+    ns.print("🕷️  Spawning auto-spider.js...");
+    if (autoSpiderArgs.length > 0) {
+        ns.print(`   Args: ${autoSpiderArgs.join(" ")}`);
+    }
+    ns.print("");
+    ns.print("📋 Auto-Spider will:");
+    ns.print("   - Cycle 1: spider + deploy (target already done!)");
+    ns.print("   - Cycle 2+: spider + target + deploy + quantum sync");
+    ns.print("   - Run FOREVER until kill");
+    ns.print("");
+    ns.print("⚡ Target-selector exits → frees 5.70GB");
+    ns.print("⚡ Auto-spider starts → uses 5.85GB (fits in 8GB!)");
+    ns.print("═══════════════════════════════════════════════════════");
+    
+    await ns.sleep(1000);
+    
+    // Spawn auto-spider (démarre APRÈS target-selector exit)
+    ns.spawn("/core/auto-spider.js", 1, ...autoSpiderArgs);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
