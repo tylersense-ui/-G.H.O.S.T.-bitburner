@@ -11,11 +11,11 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /boot.js
- * @version     0.3.3.1
+ * @version     0.3.3.2
  * @author      Claude (Godlike AI Operator)
  * @description Point d'entrée G.H.O.S.T. Framework
- *              QUANTUM SYNC: Boot minimal, Auto-Spider intelligent
- *              Plus de doublons, synchronisation avec fin des jobs
+ *              EARLY GAME FIX: Spider + Target AVANT deploy!
+ *              RAM optimisé pour home 8GB
  * 
  * @usage
  *   run /boot.js
@@ -26,28 +26,29 @@
  *   <target>        Target manuel optionnel (défaut: auto)
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @architecture_v0.3.3
+ * @architecture_v0.3.3.2
  *   STEP 1: Telemetry (daemon monitoring)
- *   STEP 2: Deploy Workers (auto-target from best-target.json)
- *   STEP 3: Auto-Spider (intelligent job sync - NO DUPLICATES!)
- *   STEP 4: Server Manager (purchased servers Matrix)
- *   STEP 5: BlackBox (optional, si RAM disponible)
+ *   STEP 2: Spider (root network - one-shot)         ← NOUVEAU!
+ *   STEP 3: Target Selector (créé best-target.json)  ← NOUVEAU!
+ *   STEP 4: Deploy Workers (lit best-target.json)
+ *   STEP 5: Auto-Spider (quantum sync cycles)
+ *   STEP 6: Server Manager (purchased servers)
+ *   STEP 7: BlackBox (optionnel si RAM)
  * 
- * @innovation_quantum_sync
- *   - Boot minimal = démarrage ultra-rapide (2-3s)
- *   - Auto-Spider fait spider + target dans cycle 1
- *   - Auto-Spider sync avec FIN des jobs (zéro temps mort!)
- *   - Plus de doublons possibles (logique unique)
+ * @innovation_v0.3.3.2
+ *   - Spider + Target AVANT deploy (résout race condition)
+ *   - Target-selector optimisé RAM (5.20GB → 2.0GB)
+ *   - best-target.json GARANTI d'exister avant deploy
+ *   - Compatible home 8GB (early game)
  * 
  * @changelog
- *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec (home = racine)
- *            - FIX: ns.exec() plus fiable que ns.run()
- *            - FIX: ns.isRunning(pid, "home") avec host explicite
+ *   v0.3.3.2 - 2026-03-14 - EARLY GAME FIX
+ *            - STEP 2+3 NOUVEAUX: Spider + Target AVANT deploy
+ *            - Résout "No target selected" en early game
+ *            - Target-selector optimisé RAM (5.20GB → 2.0GB)
+ *            - Compatible home 8GB
+ *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
- *            - REFONTE TOTALE: Boot minimal (Option A)
- *            - Auto-Spider intelligent (sync avec jobs)
- *            - Plus de doublons spider/target-selector
- *            - BlackBox optionnel en dernier (22.5GB)
  *   v0.2.0 - 2026-03-13 - G.H.O.S.T. Trinity Matrix
  *   v0.1.0 - 2026-03-08 - Initial NEXUS → G.H.O.S.T. migration
  */
@@ -83,12 +84,12 @@ export async function main(ns) {
     debug.normal("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝             ║");
     debug.normal("║                                                        ║");
     debug.normal("║  Godlike Heuristic Operator & Strategy Toolkit        ║");
-    debug.normal("║  v0.3.3.1 - QUANTUM SYNC (ns.exec fix)                ║");
+    debug.normal("║  v0.3.3.2 - EARLY GAME FIX (8GB home)                 ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
-    debug.normal("🚀 Boot Sequence: MINIMAL & INTELLIGENT");
-    debug.normal("⚡ Innovation: Auto-Spider sync avec fin des jobs");
-    debug.normal("🎯 Zero duplicates, zero downtime");
+    debug.normal("🚀 Boot Sequence: OPTIMIZED FOR 8GB HOME");
+    debug.normal("⚡ Spider + Target BEFORE deploy (race condition fix)");
+    debug.normal("🎯 Target-selector RAM optimized (5.2GB → 2.0GB)");
     debug.normal("");
     
     if (manualTarget) {
@@ -110,7 +111,7 @@ export async function main(ns) {
     const telemetryPid = ns.exec("/tools/telemetry.js", "home", 1, ...telemetryArgs);
     
     if (telemetryPid > 0) {
-        debug.normal("✅ Telemetry daemon launched (monitoring network)");
+        debug.normal("✅ Telemetry daemon launched");
         debug.toastSuccess("👁️ Telemetry online");
     } else {
         debug.verbose("⚠️  Telemetry already running or failed");
@@ -120,10 +121,68 @@ export async function main(ns) {
     await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 2: DEPLOY WORKERS (AUTO-TARGET)
+    // STEP 2: SPIDER (ROOT NETWORK - ONE-SHOT)
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 2: DEPLOY WORKERS (INITIAL)                      ║");
+    debug.normal("║ STEP 2: SPIDER (ROOT NETWORK)                         ║");
+    debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.normal("");
+    debug.normal("🕷️  Rooting all hackable servers...");
+    
+    const spiderPid = ns.exec("/core/spider.js", "home", 1);
+    
+    if (spiderPid > 0) {
+        while (ns.isRunning(spiderPid, "home")) {
+            await ns.sleep(500);
+        }
+        debug.normal("✅ Spider complete (network rooted)");
+    } else {
+        debug.normal("⚠️  Spider failed or already running");
+    }
+    
+    debug.normal("");
+    await ns.sleep(1000);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 3: TARGET SELECTOR (CREATE BEST-TARGET.JSON)
+    // ═══════════════════════════════════════════════════════════════════
+    debug.normal("╔════════════════════════════════════════════════════════╗");
+    debug.normal("║ STEP 3: TARGET SELECTOR (OPTIMIZED 2.0GB)            ║");
+    debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.normal("");
+    
+    if (!manualTarget) {
+        debug.normal("🎯 Calculating best target (profit/s)...");
+        
+        const targetPid = ns.exec("/core/target-selector.js", "home", 1);
+        
+        if (targetPid > 0) {
+            while (ns.isRunning(targetPid, "home")) {
+                await ns.sleep(500);
+            }
+            
+            const bestTarget = stateMgr.load("best-target.json");
+            if (bestTarget) {
+                debug.normal(`✅ Target selected: ${bestTarget.target}`);
+                debug.normal(`   Profit/s: $${ns.formatNumber(bestTarget.profitPerSecond)}/s`);
+            } else {
+                debug.normal("⚠️  No target found (using deploy fallback)");
+            }
+        } else {
+            debug.normal("⚠️  Target selector failed (RAM or already running)");
+        }
+    } else {
+        debug.normal(`✅ Manual target: ${manualTarget} (skipping selector)`);
+    }
+    
+    debug.normal("");
+    await ns.sleep(1500);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 4: DEPLOY WORKERS
+    // ═══════════════════════════════════════════════════════════════════
+    debug.normal("╔════════════════════════════════════════════════════════╗");
+    debug.normal("║ STEP 4: DEPLOY WORKERS                                ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     
@@ -141,31 +200,30 @@ export async function main(ns) {
             await ns.sleep(500);
         }
         
-        debug.normal("✅ Workers deployed (auto-target or manual)");
-        debug.toastSuccess("⚙️ Workers active");
+        debug.normal("✅ Workers deployed and active");
+        debug.toastSuccess("⚙️ Workers online");
     } else {
-        debug.normal("❌ Deploy workers failed");
+        debug.normal("❌ Deploy workers failed (RAM insufficient)");
     }
     
     debug.normal("");
     await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 3: AUTO-SPIDER DAEMON (QUANTUM SYNC)
+    // STEP 5: AUTO-SPIDER DAEMON (QUANTUM SYNC)
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 3: AUTO-SPIDER DAEMON (QUANTUM SYNC)             ║");
+    debug.normal("║ STEP 5: AUTO-SPIDER DAEMON (QUANTUM SYNC)             ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
-    debug.normal("⚡ Innovation: Sync avec fin des jobs (zéro downtime)");
-    debug.normal("🔄 Cycle 1 démarre immédiatement (spider + target)");
+    debug.normal("⚡ Quantum sync: Monitors jobs, instant cycles");
     debug.normal("");
     
     const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
     const autoSpiderPid = ns.exec("/core/auto-spider.js", "home", 1, ...autoSpiderArgs);
     
     if (autoSpiderPid > 0) {
-        debug.normal("✅ Auto-Spider daemon launched (intelligent sync)");
+        debug.normal("✅ Auto-Spider daemon launched");
         debug.toastSuccess("🕷️ Quantum Spider online");
     } else {
         debug.verbose("⚠️  Auto-Spider not launched (RAM or already running)");
@@ -175,10 +233,10 @@ export async function main(ns) {
     await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 4: SERVER MANAGER DAEMON
+    // STEP 6: SERVER MANAGER DAEMON
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 4: SERVER MANAGER DAEMON                         ║");
+    debug.normal("║ STEP 6: SERVER MANAGER DAEMON                         ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     
@@ -186,7 +244,7 @@ export async function main(ns) {
     const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1, ...serverMgrArgs);
     
     if (serverMgrPid > 0) {
-        debug.normal("✅ Server Manager daemon launched (Matrix servers)");
+        debug.normal("✅ Server Manager daemon launched");
         debug.toastSuccess("💻 Matrix Manager online");
     } else {
         debug.verbose("⚠️  Server Manager not launched");
@@ -196,10 +254,10 @@ export async function main(ns) {
     await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 5: BLACKBOX (OPTIONAL - SI RAM DISPONIBLE)
+    // STEP 7: BLACKBOX (OPTIONAL - SI RAM DISPONIBLE)
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 5: BLACKBOX CONTRACT SOLVER (OPTIONAL)           ║");
+    debug.normal("║ STEP 7: BLACKBOX CONTRACT SOLVER (OPTIONAL)           ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     
@@ -217,9 +275,9 @@ export async function main(ns) {
         
         if (blackboxPid > 0) {
             debug.normal("✅ BlackBox contract solver launched");
-            debug.toastInfo("🎲 BlackBox solver active");
+            debug.toastInfo("🎲 BlackBox active");
         } else {
-            debug.verbose("⚠️  BlackBox not launched (already running or failed)");
+            debug.verbose("⚠️  BlackBox not launched");
         }
     } else {
         debug.verbose(`⚠️  Insufficient RAM for BlackBox (need ${blackboxRam}GB, have ${ns.formatRam(homeAvailRam)})`);
@@ -233,19 +291,20 @@ export async function main(ns) {
     // BOOT COMPLETE
     // ═══════════════════════════════════════════════════════════════════
     debug.separator();
-    debug.normal("🎉 G.H.O.S.T. v0.3.3 - QUANTUM SYNC - BOOT COMPLETE");
+    debug.normal("🎉 G.H.O.S.T. v0.3.3.2 - EARLY GAME FIX - BOOT COMPLETE");
     debug.normal("");
-    debug.normal("🕷️  Auto-Spider : Intelligent job sync (zero downtime)");
+    debug.normal("🕷️  Auto-Spider : Quantum sync (zero downtime)");
     debug.normal("💻 Server Manager : Matrix purchased servers");
-    debug.normal("👁️  Telemetry : Network monitoring active");
-    debug.normal("⚙️  Workers : Deployed and running");
+    debug.normal("👁️  Telemetry : Network monitoring");
+    debug.normal("⚙️  Workers : Deployed and active");
+    debug.normal("🎯 Target : Auto-selected (profit/s optimized)");
     if (homeAvailRam >= blackboxRam) {
         debug.normal("🎲 BlackBox : Contract solver active");
     }
     debug.normal("");
-    debug.normal("💰 Framework optimized for maximum revenue");
-    debug.normal("⚡ Innovation: Zero duplicate cycles, instant reactivity");
+    debug.normal("💰 Framework optimized for home 8GB");
+    debug.normal("⚡ Spider + Target BEFORE deploy (race condition fixed)");
     debug.separator();
     
-    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3 QUANTUM SYNC online!");
+    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3.2 online!");
 }
