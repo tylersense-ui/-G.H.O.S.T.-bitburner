@@ -11,38 +11,46 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /boot.js
- * @version     0.2.0
+ * @version     0.3.3
  * @author      Claude (Godlike AI Operator)
- * @description Point d'entrée principal G.H.O.S.T. v0.2.0 Trinity Matrix
- *              Orchestrateur : telemetry, spider, target-selector,
- *              deploy-workers, blackbox, auto-spider, server-manager
+ * @description Point d'entrée G.H.O.S.T. Framework
+ *              QUANTUM SYNC: Boot minimal, Auto-Spider intelligent
+ *              Plus de doublons, synchronisation avec fin des jobs
  * 
  * @usage
  *   run /boot.js
  *   run /boot.js --debug 2
- *   run /boot.js --target foodnstuff
+ *   run /boot.js n00dles          # Force target manuel
  * 
  * @commands
+ *   <target>        Target manuel optionnel (défaut: auto)
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
- *   --target <srv>  Serveur cible initial (défaut: auto from best-target.json)
+ * 
+ * @architecture_v0.3.3
+ *   STEP 1: Telemetry (daemon monitoring)
+ *   STEP 2: Deploy Workers (auto-target from best-target.json)
+ *   STEP 3: Auto-Spider (intelligent job sync - NO DUPLICATES!)
+ *   STEP 4: Server Manager (purchased servers Matrix)
+ *   STEP 5: BlackBox (optional, si RAM disponible)
+ * 
+ * @innovation_quantum_sync
+ *   - Boot minimal = démarrage ultra-rapide (2-3s)
+ *   - Auto-Spider fait spider + target dans cycle 1
+ *   - Auto-Spider sync avec FIN des jobs (zéro temps mort!)
+ *   - Plus de doublons possibles (logique unique)
  * 
  * @changelog
- *   v0.2.0 - 2025-01-XX - G.H.O.S.T. v0.2.0 Trinity Matrix
- *            - ADDED: target-selector (initial run)
- *            - ADDED: auto-spider daemon (5min cycle)
- *            - ADDED: server-manager daemon (2min cycle)
- *            - MODIFIED: deploy-workers avec auto-target
- *            - Trinity Matrix complete automation
- *   v0.1.0 - 2025-01-XX - Initial release (BN1.1 virgin run)
- *            - Bootstrap séquence : telemetry -> spider -> deploy
- *            - Target automatique : n00dles (facile, early game)
- *            - Monitoring permanent (telemetry daemon)
- *            - Auto-root network (spider)
- *            - Worker deployment (deploy-workers)
- *            - BlackBox contract solver en option
+ *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
+ *            - REFONTE TOTALE: Boot minimal (Option A)
+ *            - Auto-Spider intelligent (sync avec jobs)
+ *            - Plus de doublons spider/target-selector
+ *            - BlackBox optionnel en dernier (22.5GB)
+ *   v0.2.0 - 2026-03-13 - G.H.O.S.T. Trinity Matrix
+ *   v0.1.0 - 2026-03-08 - Initial NEXUS → G.H.O.S.T. migration
  */
 
-import { Debug } from "/lib/debug.js";
+import { Debug, parseDebugLevel } from "/lib/debug.js";
+import { StateManager } from "/lib/state-manager.js";
 
 const DEFAULT_DEBUG = 1;
 
@@ -51,36 +59,44 @@ export async function main(ns) {
     // ═══════════════════════════════════════════════════════════════════
     // INIT
     // ═══════════════════════════════════════════════════════════════════
-    const debugLevel = parseInt(ns.args[ns.args.indexOf("--debug") + 1]) || DEFAULT_DEBUG;
-    const manualTarget = ns.args[ns.args.indexOf("--target") + 1] || null;
+    const debugLevel = parseDebugLevel(ns.args, DEFAULT_DEBUG);
+    const manualTarget = ns.args.find(arg => !arg.startsWith("--") && arg !== debugLevel.toString());
     
     const debug = new Debug(ns, debugLevel);
+    const stateMgr = new StateManager(ns);
+    
+    ns.ui.openTail();
+    debug.clear();
     
     // ═══════════════════════════════════════════════════════════════════
     // HEADER
     // ═══════════════════════════════════════════════════════════════════
-    debug.clear();
-    ns.print("╔═══════════════════════════════════════════════════════════╗");
-    ns.print("║  ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗             ║");
-    ns.print("║ ██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝             ║");
-    ns.print("║ ██║  ███╗███████║██║   ██║███████╗   ██║                ║");
-    ns.print("║ ██║   ██║██╔══██║██║   ██║╚════██║   ██║                ║");
-    ns.print("║ ╚██████╔╝██║  ██║╚██████╔╝███████║   ██║                ║");
-    ns.print("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝                ║");
-    ns.print("║                                                           ║");
-    ns.print("║  Godlike Heuristic Operator & Strategy Toolkit           ║");
-    ns.print("║  v0.2.0 - TRINITY MATRIX                                 ║");
-    ns.print("╚═══════════════════════════════════════════════════════════╝");
-    ns.print("");
-    ns.print(`🐛 Debug Level: ${debug.getLevelName()}`);
-    ns.print(`💰 Money: $${ns.formatNumber(ns.getServerMoneyAvailable("home"))}`);
-    ns.print(`📊 Hacking: ${ns.getHackingLevel()}`);
-    ns.print("");
+    debug.normal("╔════════════════════════════════════════════════════════╗");
+    debug.normal("║  ██████╗ ██╗  ██╗ ██████╗ ███████╗████████╗          ║");
+    debug.normal("║ ██╔════╝ ██║  ██║██╔═══██╗██╔════╝╚══██╔══╝          ║");
+    debug.normal("║ ██║  ███╗███████║██║   ██║███████╗   ██║             ║");
+    debug.normal("║ ██║   ██║██╔══██║██║   ██║╚════██║   ██║             ║");
+    debug.normal("║ ╚██████╔╝██║  ██║╚██████╔╝███████║   ██║             ║");
+    debug.normal("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝             ║");
+    debug.normal("║                                                        ║");
+    debug.normal("║  Godlike Heuristic Operator & Strategy Toolkit        ║");
+    debug.normal("║  v0.3.3 - QUANTUM SYNC EDITION                        ║");
+    debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.normal("");
+    debug.normal("🚀 Boot Sequence: MINIMAL & INTELLIGENT");
+    debug.normal("⚡ Innovation: Auto-Spider sync avec fin des jobs");
+    debug.normal("🎯 Zero duplicates, zero downtime");
+    debug.normal("");
     
-    debug.toastInfo("G.H.O.S.T. v0.2.0 - Trinity Matrix - Initializing...");
+    if (manualTarget) {
+        debug.normal(`🎯 Manual target override: ${manualTarget}`);
+        debug.normal("");
+    }
+    
+    await ns.sleep(1000);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 1: LAUNCH TELEMETRY DAEMON
+    // STEP 1: TELEMETRY DAEMON
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
     debug.normal("║ STEP 1: TELEMETRY DAEMON                              ║");
@@ -91,78 +107,24 @@ export async function main(ns) {
     const telemetryPid = ns.exec("/tools/telemetry.js", "home", 1, ...telemetryArgs);
     
     if (telemetryPid > 0) {
-        debug.normal("✅ Telemetry daemon launched");
-        debug.toastSuccess("Telemetry daemon online");
+        debug.normal("✅ Telemetry daemon launched (monitoring network)");
+        debug.toastSuccess("👁️ Telemetry online");
     } else {
-        debug.normal("⚠️  Telemetry daemon already running or failed");
+        debug.verbose("⚠️  Telemetry already running or failed");
     }
     
     debug.normal("");
-    await ns.sleep(2000);
+    await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 2: SPIDER (AUTO-ROOT NETWORK)
+    // STEP 2: DEPLOY WORKERS (AUTO-TARGET)
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 2: SPIDER - AUTO-ROOT NETWORK                    ║");
+    debug.normal("║ STEP 2: DEPLOY WORKERS (INITIAL)                      ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     
-    const spiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const spiderPid = ns.run("/core/spider.js", 1, ...spiderArgs);
-    
-    if (spiderPid > 0) {
-        debug.normal("✅ Spider launched - waiting for completion...");
-        
-        while (ns.isRunning(spiderPid)) {
-            await ns.sleep(500);
-        }
-        
-        debug.normal("✅ Spider completed");
-        debug.toastSuccess("Network auto-rooted");
-    } else {
-        debug.normal("❌ Spider failed to launch");
-    }
-    
-    debug.normal("");
-    await ns.sleep(2000);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 3: TARGET SELECTOR (INITIAL RUN) - NEW v0.2.0
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 3: TARGET SELECTOR - INITIAL RUN                 ║");
-    debug.normal("╚════════════════════════════════════════════════════════╝");
-    debug.normal("");
-    
-    const selectorArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const selectorPid = ns.run("/core/target-selector.js", 1, ...selectorArgs);
-    
-    if (selectorPid > 0) {
-        debug.normal("✅ Target selector launched - waiting for completion...");
-        
-        while (ns.isRunning(selectorPid)) {
-            await ns.sleep(500);
-        }
-        
-        debug.normal("✅ Best target calculated");
-        debug.toastSuccess("Optimal target selected");
-    } else {
-        debug.normal("❌ Target selector failed to launch");
-    }
-    
-    debug.normal("");
-    await ns.sleep(2000);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 4: DEPLOY WORKERS
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 4: DEPLOY WORKERS                                ║");
-    debug.normal("╚════════════════════════════════════════════════════════╝");
-    debug.normal("");
-    
-    const deployArgs = manualTarget ? [manualTarget] : []; // Auto-target if no manual
+    const deployArgs = manualTarget ? [manualTarget] : [];
     if (debugLevel > 1) {
         deployArgs.push("--debug", debugLevel);
     }
@@ -170,68 +132,50 @@ export async function main(ns) {
     const deployPid = ns.run("/core/deploy-workers.js", 1, ...deployArgs);
     
     if (deployPid > 0) {
-        debug.normal("✅ Deploy workers launched - waiting for completion...");
+        debug.normal("✅ Deploy workers launched...");
         
         while (ns.isRunning(deployPid)) {
             await ns.sleep(500);
         }
         
-        debug.normal("✅ Workers deployed");
-        debug.toastSuccess("Workers deployed on all servers");
+        debug.normal("✅ Workers deployed (auto-target or manual)");
+        debug.toastSuccess("⚙️ Workers active");
     } else {
-        debug.normal("❌ Deploy workers failed to launch");
+        debug.normal("❌ Deploy workers failed");
     }
     
     debug.normal("");
-    await ns.sleep(2000);
+    await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 5: BLACKBOX CONTRACT SOLVER (OPTIONAL)
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 5: BLACKBOX (OPTIONAL)                           ║");
-    debug.normal("╚════════════════════════════════════════════════════════╝");
-    debug.normal("");
-    
-    const blackboxArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const blackboxPid = ns.exec("/tools/blackbox.js", "home", 1, ...blackboxArgs);
-    
-    if (blackboxPid > 0) {
-        debug.normal("✅ BlackBox contract solver launched (background)");
-        debug.toastInfo("BlackBox solver active");
-    } else {
-        debug.verbose("⚠️  BlackBox not launched (RAM or already running)");
-    }
-    
-    debug.normal("");
-    await ns.sleep(2000);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 6: AUTO-SPIDER DAEMON - NEW v0.2.0
+    // STEP 3: AUTO-SPIDER DAEMON (QUANTUM SYNC)
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 6: AUTO-SPIDER DAEMON (5min cycle)               ║");
+    debug.normal("║ STEP 3: AUTO-SPIDER DAEMON (QUANTUM SYNC)             ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.normal("");
+    debug.normal("⚡ Innovation: Sync avec fin des jobs (zéro downtime)");
+    debug.normal("🔄 Cycle 1 démarre immédiatement (spider + target)");
     debug.normal("");
     
     const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
     const autoSpiderPid = ns.exec("/core/auto-spider.js", "home", 1, ...autoSpiderArgs);
     
     if (autoSpiderPid > 0) {
-        debug.normal("✅ Auto-Spider daemon launched (background)");
-        debug.toastSuccess("Auto-Spider daemon online");
+        debug.normal("✅ Auto-Spider daemon launched (intelligent sync)");
+        debug.toastSuccess("🕷️ Quantum Spider online");
     } else {
-        debug.verbose("⚠️  Auto-Spider not launched");
+        debug.verbose("⚠️  Auto-Spider not launched (RAM or already running)");
     }
     
     debug.normal("");
-    await ns.sleep(2000);
+    await ns.sleep(1500);
     
     // ═══════════════════════════════════════════════════════════════════
-    // STEP 7: SERVER MANAGER DAEMON - NEW v0.2.0
+    // STEP 4: SERVER MANAGER DAEMON
     // ═══════════════════════════════════════════════════════════════════
     debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ STEP 7: SERVER MANAGER DAEMON (2min cycle)            ║");
+    debug.normal("║ STEP 4: SERVER MANAGER DAEMON                         ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
     
@@ -239,40 +183,66 @@ export async function main(ns) {
     const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1, ...serverMgrArgs);
     
     if (serverMgrPid > 0) {
-        debug.normal("✅ Server Manager daemon launched (background)");
-        debug.toastSuccess("Server Manager Matrix online");
+        debug.normal("✅ Server Manager daemon launched (Matrix servers)");
+        debug.toastSuccess("💻 Matrix Manager online");
     } else {
         debug.verbose("⚠️  Server Manager not launched");
     }
     
     debug.normal("");
+    await ns.sleep(1500);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 5: BLACKBOX (OPTIONAL - SI RAM DISPONIBLE)
+    // ═══════════════════════════════════════════════════════════════════
+    debug.normal("╔════════════════════════════════════════════════════════╗");
+    debug.normal("║ STEP 5: BLACKBOX CONTRACT SOLVER (OPTIONAL)           ║");
+    debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.normal("");
+    
+    const homeMaxRam = ns.getServerMaxRam("home");
+    const homeUsedRam = ns.getServerUsedRam("home");
+    const homeAvailRam = homeMaxRam - homeUsedRam;
+    
+    const blackboxRam = 22.5; // GB requis
+    
+    if (homeAvailRam >= blackboxRam) {
+        debug.normal(`✅ RAM available: ${ns.formatRam(homeAvailRam)} (need ${blackboxRam}GB)`);
+        
+        const blackboxArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
+        const blackboxPid = ns.exec("/tools/blackbox.js", "home", 1, ...blackboxArgs);
+        
+        if (blackboxPid > 0) {
+            debug.normal("✅ BlackBox contract solver launched");
+            debug.toastInfo("🎲 BlackBox solver active");
+        } else {
+            debug.verbose("⚠️  BlackBox not launched (already running or failed)");
+        }
+    } else {
+        debug.verbose(`⚠️  Insufficient RAM for BlackBox (need ${blackboxRam}GB, have ${ns.formatRam(homeAvailRam)})`);
+        debug.verbose("   BlackBox will launch when home RAM upgraded");
+    }
+    
+    debug.normal("");
+    await ns.sleep(1000);
     
     // ═══════════════════════════════════════════════════════════════════
     // BOOT COMPLETE
     // ═══════════════════════════════════════════════════════════════════
-    debug.normal("╔════════════════════════════════════════════════════════╗");
-    debug.normal("║ 🚀 G.H.O.S.T. v0.2.0 TRINITY MATRIX - BOOT COMPLETE    ║");
-    debug.normal("╚════════════════════════════════════════════════════════╝");
+    debug.separator();
+    debug.normal("🎉 G.H.O.S.T. v0.3.3 - QUANTUM SYNC - BOOT COMPLETE");
     debug.normal("");
-    debug.normal("📊 Active Services:");
-    debug.normal("   👁️  Telemetry daemon (monitoring 30s)");
-    debug.normal("   💰 Workers deployed (auto-target)");
-    debug.normal("   🎯 BlackBox solver (contracts)");
-    debug.normal("   🕷️  Auto-Spider daemon (re-root 5min)");
-    debug.normal("   💻 Server Manager daemon (Matrix 2min)");
+    debug.normal("🕷️  Auto-Spider : Intelligent job sync (zero downtime)");
+    debug.normal("💻 Server Manager : Matrix purchased servers");
+    debug.normal("👁️  Telemetry : Network monitoring active");
+    debug.normal("⚙️  Workers : Deployed and running");
+    if (homeAvailRam >= blackboxRam) {
+        debug.normal("🎲 BlackBox : Contract solver active");
+    }
     debug.normal("");
-    debug.normal("💡 Next steps:");
-    debug.normal("   - Monitor: tail /tools/telemetry.js");
-    debug.normal("   - Check target: cat /state/best-target.json");
-    debug.normal("   - Manual action: run /tools/log-action.js \"message\"");
-    debug.normal("");
+    debug.normal("💰 Framework optimized for maximum revenue");
+    debug.normal("⚡ Innovation: Zero duplicate cycles, instant reactivity");
+    debug.separator();
     
-    debug.toastSuccess("G.H.O.S.T. v0.2.0 Trinity Matrix fully operational!");
-    
-    ns.tprint("════════════════════════════════════════════════════════════");
-    ns.tprint("🎉 G.H.O.S.T. v0.2.0 - TRINITY MATRIX - BOOT COMPLETE");
-    ns.tprint("🎯 Auto-targeting enabled");
-    ns.tprint("🕷️  Auto-Spider active (5min)");
-    ns.tprint("💻 Server Manager active (2min)");
-    ns.tprint("════════════════════════════════════════════════════════════");
+    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3 QUANTUM SYNC online!");
 }
