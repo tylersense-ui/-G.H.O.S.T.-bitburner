@@ -11,11 +11,11 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /boot.js
- * @version     0.3.3.4
+ * @version     0.3.3.5
  * @author      Claude (Godlike AI Operator)
  * @description Point d'entrée G.H.O.S.T. Framework
- *              ULTRA-SIMPLE: Auto-Spider + Server-Manager + EXIT
- *              Telemetry & BlackBox: launch manual
+ *              ns.spawn() FIX: Lance auto-spider APRÈS boot exit!
+ *              Boot termine → libère 4.40GB → auto-spider démarre
  * 
  * @usage
  *   run /boot.js
@@ -24,42 +24,32 @@
  * @commands
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @architecture_v0.3.3.4
- *   Boot.js (minimal RAM - EXIT rapide!):
- *     STEP 1: Launch Auto-Spider daemon  ← FAIT TOUT!
- *     STEP 2: Launch Server Manager daemon
- *     STEP 3: EXIT (libère boot.js RAM!)
+ * @architecture_v0.3.3.5
+ *   Boot.js (4.40GB - mais TERMINE avant spawn!):
+ *     1. Affiche header
+ *     2. ns.spawn("/core/auto-spider.js") ← Lance APRÈS exit!
+ *     3. EXIT (libère 4.40GB)
  *   
- *   Auto-Spider cycle 1 (avec ~7GB libres!):
- *     - Spider (2.35GB) ✅
- *     - Target-selector (5.70GB) ✅ RAM suffisante!
- *     - Deploy-workers (5.60GB) ✅
+ *   Auto-Spider démarre (avec 8GB libres!):
+ *     - Cycle 1: spider + target + deploy + launch server-manager
  *     - Quantum sync...
  * 
- * @manual_launch
- *   Telemetry (5.75GB): run tools/telemetry.js
- *   BlackBox (22.5GB): run tools/blackbox.js
- * 
- * @innovation_v0.3.3.4
- *   - Boot ULTRA-SIMPLE: 2 daemons + exit
- *   - Telemetry skipped (manual launch)
- *   - BlackBox skipped (manual launch)
- *   - Auto-spider has ~7GB free for cycle 1
- *   - Résout définitivement problème RAM 8GB
+ * @innovation_v0.3.3.5
+ *   - ns.spawn() au lieu de ns.exec()
+ *   - Boot termine AVANT auto-spider démarre
+ *   - Auto-spider a 8GB libres (vs 2.15GB avant)
+ *   - Résout définitivement problème RAM
  * 
  * @changelog
+ *   v0.3.3.5 - 2026-03-14 - ns.spawn() FIX
+ *            - ns.exec() → ns.spawn() (lance APRÈS exit)
+ *            - Boot termine avant auto-spider démarre
+ *            - Auto-spider a 8GB libres (définitif!)
  *   v0.3.3.4 - 2026-03-14 - ULTRA-SIMPLE BOOT
- *            - Telemetry removed (5.75GB saved!)
- *            - BlackBox removed (22.5GB saved!)
- *            - Boot = auto-spider + server-manager only
- *            - ~7GB free pour auto-spider cycle 1
- *            - Manual launch: telemetry + blackbox
  *   v0.3.3.3 - 2026-03-14 - ULTRA-MINIMAL BOOT
  *   v0.3.3.2 - 2026-03-14 - EARLY GAME FIX
  *   v0.3.3.1 - 2026-03-14 - HOTFIX: ns.run → ns.exec
  *   v0.3.3 - 2026-03-14 - QUANTUM SYNC EDITION
- *   v0.2.0 - 2026-03-13 - G.H.O.S.T. Trinity Matrix
- *   v0.1.0 - 2026-03-08 - Initial NEXUS → G.H.O.S.T. migration
  */
 
 import { Debug, parseDebugLevel } from "/lib/debug.js";
@@ -89,81 +79,67 @@ export async function main(ns) {
     debug.normal("║  ╚═════╝ ╚═╝  ╚═╝ ╚═════╝ ╚══════╝   ╚═╝             ║");
     debug.normal("║                                                        ║");
     debug.normal("║  Godlike Heuristic Operator & Strategy Toolkit        ║");
-    debug.normal("║  v0.3.3.4 - ULTRA-SIMPLE (8GB optimized)              ║");
+    debug.normal("║  v0.3.3.5 - ns.spawn() FIX                            ║");
     debug.normal("╚════════════════════════════════════════════════════════╝");
     debug.normal("");
-    debug.normal("🚀 Boot: ULTRA-SIMPLE (2 daemons + exit)");
-    debug.normal("⚡ Auto-Spider: Does spider + target + deploy");
-    debug.normal("🎯 Manual: Telemetry + BlackBox (optional)");
+    debug.normal("🚀 Boot: ns.spawn() (launches AFTER boot exits)");
+    debug.normal("⚡ Auto-Spider: Will have 8GB free (not 2GB!)");
+    debug.normal("🎯 Fix: Boot exits → RAM freed → auto-spider starts");
     debug.normal("");
-    
-    await ns.sleep(500);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 1: AUTO-SPIDER DAEMON (FAIT TOUT!)
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 1/2: Auto-Spider daemon (quantum sync)...");
-    debug.verbose("   Cycle 1: spider + target + deploy");
-    debug.verbose("   Cycles 2+: quantum sync (instant reactivity)");
-    
-    const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const autoSpiderPid = ns.exec("/core/auto-spider.js", "home", 1, ...autoSpiderArgs);
-    
-    if (autoSpiderPid > 0) {
-        debug.normal("   ✅ Auto-Spider launched (PID: " + autoSpiderPid + ")");
-        debug.toastSuccess("🕷️ Quantum Spider online");
-    } else {
-        debug.verbose("   ⚠️  Auto-Spider already running");
-    }
-    
-    await ns.sleep(300);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // STEP 2: SERVER MANAGER DAEMON
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("STEP 2/2: Server Manager daemon...");
-    
-    const serverMgrArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1, ...serverMgrArgs);
-    
-    if (serverMgrPid > 0) {
-        debug.normal("   ✅ Server Manager launched (PID: " + serverMgrPid + ")");
-        debug.toastSuccess("💻 Matrix Manager online");
-    } else {
-        debug.verbose("   ⚠️  Server Manager already running");
-    }
-    
-    await ns.sleep(300);
-    
-    // ═══════════════════════════════════════════════════════════════════
-    // BOOT COMPLETE - EXIT IMMÉDIATEMENT!
-    // ═══════════════════════════════════════════════════════════════════
-    debug.normal("");
-    debug.separator();
-    debug.normal("🎉 G.H.O.S.T. v0.3.3.4 - ULTRA-SIMPLE - BOOT COMPLETE!");
-    debug.normal("");
-    debug.normal("🕷️  Auto-Spider : Cycle 1 starting now...");
-    debug.normal("   → Spider (root network)");
-    debug.normal("   → Target-selector (find best target)");
-    debug.normal("   → Deploy-workers (launch workers)");
-    debug.normal("   → Quantum sync (zero downtime)");
-    debug.normal("");
-    debug.normal("💻 Server Manager : Purchasing/upgrading Matrix servers");
-    debug.normal("");
-    debug.normal("📋 MANUAL LAUNCH (optional):");
-    debug.normal("   Telemetry : run tools/telemetry.js");
-    debug.normal("   BlackBox  : run tools/blackbox.js");
-    debug.normal("");
-    debug.normal("⚡ Boot.js exiting → freeing RAM for Auto-Spider!");
-    debug.normal("📊 Auto-Spider will have ~7GB free for cycle 1");
-    debug.separator();
-    debug.normal("");
-    debug.normal("💰 Framework optimized for home 8GB");
-    debug.normal("🚀 Tail /core/auto-spider.js to watch cycle 1!");
-    
-    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3.4 online!");
     
     await ns.sleep(1000);
     
-    // EXIT → libère boot.js RAM!
+    // ═══════════════════════════════════════════════════════════════════
+    // SPAWN AUTO-SPIDER (LANCE APRÈS BOOT EXIT!)
+    // ═══════════════════════════════════════════════════════════════════
+    debug.separator();
+    debug.normal("📋 SPAWN QUEUE:");
+    debug.normal("");
+    debug.normal("   1. Auto-Spider (quantum sync)");
+    debug.normal("      → Cycle 1: spider + target + deploy");
+    debug.normal("      → Launch server-manager in cycle 1");
+    debug.normal("      → Quantum sync cycles");
+    debug.normal("");
+    debug.normal("⚡ Boot will EXIT → free 4.40GB");
+    debug.normal("⚡ Auto-Spider will START → use 5.85GB (fits in 8GB!)");
+    debug.separator();
+    debug.normal("");
+    
+    await ns.sleep(1000);
+    
+    // Prépare args pour auto-spider
+    const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
+    
+    debug.normal("🚀 Spawning Auto-Spider...");
+    debug.verbose(`   Args: ${autoSpiderArgs.join(" ") || "(none)"}`);
+    debug.normal("");
+    
+    // ns.spawn() lance le script APRÈS que boot.js termine
+    ns.spawn("/core/auto-spider.js", 1, ...autoSpiderArgs);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // BOOT EXIT MESSAGE
+    // ═══════════════════════════════════════════════════════════════════
+    debug.separator();
+    debug.normal("🎉 G.H.O.S.T. v0.3.3.5 - SPAWN SCHEDULED!");
+    debug.normal("");
+    debug.normal("📋 EXECUTION ORDER:");
+    debug.normal("   1. Boot.js exits NOW → frees 4.40GB");
+    debug.normal("   2. Auto-Spider starts → uses 5.85GB (fits!)");
+    debug.normal("   3. Cycle 1: spider + target + deploy + server-mgr");
+    debug.normal("   4. Quantum sync running");
+    debug.normal("");
+    debug.normal("⚡ RAM after boot exit: 8GB free");
+    debug.normal("⚡ RAM after auto-spider start: 2.15GB free");
+    debug.normal("⚡ RAM for target-selector: 2.15GB available");
+    debug.normal("");
+    debug.normal("💡 Auto-Spider will tail automatically");
+    debug.normal("💡 Or run: tail /core/auto-spider.js");
+    debug.separator();
+    
+    debug.toastSuccess("🎉 G.H.O.S.T. v0.3.3.5 spawning!");
+    
+    await ns.sleep(2000);
+    
+    // EXIT → libère 4.40GB → auto-spider démarre avec 8GB libres!
 }

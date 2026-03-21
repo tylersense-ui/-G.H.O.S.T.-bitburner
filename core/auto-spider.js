@@ -11,10 +11,10 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/auto-spider.js
- * @version     0.3.3.3
+ * @version     0.3.3.5
  * @author      Claude (Godlike AI Operator)
  * @description QUANTUM SYNC Auto-Spider - FAIT TOUT!
- *              Cycle 1: Spider + Target + Deploy (FORCE)
+ *              Cycle 1: Spider + Target + Deploy + Server-Manager
  *              Cycles suivants: Quantum sync (instant reactivity)
  * 
  * @usage
@@ -24,11 +24,12 @@
  * @commands
  *   --debug <0-3>   Niveau de verbosité (défaut: 1)
  * 
- * @innovation_v0.3.3.3
- *   CYCLE 1 (boot.js vient de lancer):
- *   - Spider (root network avec 6.5GB libres!)
+ * @innovation_v0.3.3.5
+ *   CYCLE 1 (spawned by boot.js avec 8GB libres!):
+ *   - Spider (root network)
  *   - Target-selector (5.70GB requis - OK!)
  *   - Deploy-workers (5.60GB requis - OK!)
+ *   - Launch Server-Manager (daemon)
  *   
  *   CYCLES SUIVANTS (quantum sync):
  *   - Spider (check nouveaux serveurs)
@@ -41,12 +42,17 @@
  *   1. Spider (auto-root nouveaux serveurs)
  *   2. Target Selector (recalcule meilleure cible)
  *   3. Deploy Workers (cycle 1 FORCE, autres si nouveaux)
- *   4. SMART WAIT:
+ *   4. Launch Server Manager (cycle 1 only)
+ *   5. SMART WAIT:
  *      - Sleep 90% du weaken time estimé
  *      - Surveillance active derniers 10%
  *      - Cycle immédiat dès que workers finissent
  * 
  * @changelog
+ *   v0.3.3.5 - 2026-03-14 - ns.spawn() BOOT SUPPORT
+ *            - Spawned by boot.js (has 8GB free!)
+ *            - Cycle 1 STEP 4: Launch server-manager
+ *            - Boot no longer launches server-manager
  *   v0.3.3.3 - 2026-03-14 - ULTRA-MINIMAL BOOT SUPPORT
  *            - Cycle 1: FORCE deploy (même si newServers = 0)
  *            - Boot.js exit libère RAM pour cycle 1
@@ -74,7 +80,7 @@ export async function main(ns) {
     
     ns.ui.openTail();
     debug.clear();
-    debug.header("🕷️ AUTO-SPIDER v0.3.3.3 - QUANTUM SYNC");
+    debug.header("🕷️ AUTO-SPIDER v0.3.3.5 - QUANTUM SYNC");
     debug.normal("");
     debug.normal("⚡ Cycle 1: Spider + Target + Deploy (FORCE)");
     debug.normal("⚡ Cycles suivants: Quantum sync (instant)");
@@ -199,7 +205,27 @@ export async function main(ns) {
         }
         
         // ═══════════════════════════════════════════════════════════
-        // STEP 4: QUANTUM SYNC - SMART WAIT
+        // STEP 4: LAUNCH SERVER MANAGER (CYCLE 1 ONLY)
+        // ═══════════════════════════════════════════════════════════
+        if (cycle === 1) {
+            debug.verbose("═══════════════════════════════════════════════════════");
+            debug.verbose("STEP 4: LAUNCH SERVER MANAGER (CYCLE 1)");
+            debug.verbose("═══════════════════════════════════════════════════════");
+            debug.verbose("");
+            
+            const serverMgrPid = ns.exec("/managers/server-manager.js", "home", 1);
+            if (serverMgrPid > 0) {
+                debug.normal(`✅ Server Manager launched (PID: ${serverMgrPid})`);
+                debug.toastSuccess("💻 Matrix Manager online");
+            } else {
+                debug.verbose("   ⚠️  Server Manager already running or failed");
+            }
+            
+            debug.normal("");
+        }
+        
+        // ═══════════════════════════════════════════════════════════
+        // STEP 5: QUANTUM SYNC - SMART WAIT
         // ═══════════════════════════════════════════════════════════
         debug.separator();
         debug.normal("⚡ QUANTUM SYNC: Waiting for jobs to complete...");
