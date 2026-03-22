@@ -213,41 +213,6 @@ export async function main(ns) {
         ns.print(`   ${i + 1}. ${t.target.padEnd(20)} $${ns.formatNumber(t.profitPerSecond)}/s`);
     }
     
-    // ═══════════════════════════════════════════════════════════════════
-    // SPAWN AUTO-SPIDER (SPAWN CHAIN)
-    // ═══════════════════════════════════════════════════════════════════
-    ns.print("");
-    ns.print("═══════════════════════════════════════════════════════");
-    ns.print("🔗 SPAWN CHAIN: Launching Auto-Spider...");
-    ns.print("");
-    
-    await ns.sleep(1000);
-    
-    // Parse debug level from args
-    const debugArg = ns.args.find(arg => arg === "--debug");
-    const debugLevel = debugArg ? parseInt(ns.args[ns.args.indexOf("--debug") + 1]) : 1;
-    
-    const autoSpiderArgs = debugLevel > 1 ? ["--debug", debugLevel] : [];
-    
-    ns.print("🕷️  Spawning auto-spider.js...");
-    if (autoSpiderArgs.length > 0) {
-        ns.print(`   Args: ${autoSpiderArgs.join(" ")}`);
-    }
-    ns.print("");
-    ns.print("📋 Auto-Spider will:");
-    ns.print("   - Cycle 1: spider + deploy (target already done!)");
-    ns.print("   - Cycle 2+: spider + target + deploy + quantum sync");
-    ns.print("   - Run FOREVER until kill");
-    ns.print("");
-    ns.print("⚡ Target-selector exits → frees 5.70GB");
-    ns.print("⚡ Auto-spider starts → uses 5.85GB (fits in 8GB!)");
-    ns.print("═══════════════════════════════════════════════════════");
-    
-    await ns.sleep(1000);
-    
-    // Spawn auto-spider (démarre APRÈS target-selector exit)
-    ns.spawn("/core/auto-spider.js", 1, ...autoSpiderArgs);
-}
 
 // ═══════════════════════════════════════════════════════════════════════
 // HELPER FUNCTIONS (INLINE - NO IMPORTS)
