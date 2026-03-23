@@ -11,11 +11,10 @@
  * ╚═══════════════════════════════════════════════════════════╝
  * 
  * @file        /core/bootstrap.js
- * @version     0.3.3.7
+ * @version     0.3.3.8
  * @author      Claude (Godlike AI Operator)
  * @description BOOTSTRAP ORCHESTRATOR - Runs on n00dles!
- *              Orchestrates spider + target + deploy + auto-spider
- *              Keeps home RAM free (8GB) during entire bootstrap
+ *              SCP FIX: Copies files to home BEFORE exec!
  * 
  * @usage
  *   run /core/bootstrap.js (launched by boot.js)
@@ -26,22 +25,18 @@
  * 
  * @architecture
  *   Bootstrap (runs on n00dles ~2GB):
+ *     STEP 0: SCP all files to home
  *     STEP 1: Spider (root network) on n00dles
  *     STEP 2: Target-selector on home (8GB free ✅)
  *     STEP 3: Deploy-workers on home (8GB free ✅)
  *     STEP 4: Auto-spider on home (8GB free ✅)
  *     EXIT
  * 
- * @innovation
- *   - Runs on n00dles (not home!)
- *   - Home always 8GB free
- *   - Sequential execution on home
- *   - Each script has full RAM available
- * 
  * @changelog
+ *   v0.3.3.8 - 2026-03-14 - SCP FIX
+ *            - Copy files to home BEFORE exec
+ *            - Fixes target-selector not starting
  *   v0.3.3.7 - 2026-03-14 - Initial creation
- *            - Bootstrap orchestrator
- *            - Multi-server architecture
  */
 
 /** @param {NS} ns */
@@ -62,7 +57,7 @@ export async function main(ns) {
     // HEADER
     // ═══════════════════════════════════════════════════════════════════
     ns.print("╔═══════════════════════════════════════════════════════════╗");
-    ns.print("║   🔧 BOOTSTRAP ORCHESTRATOR v0.3.3.7                      ║");
+    ns.print("║   🔧 BOOTSTRAP ORCHESTRATOR v0.3.3.8                      ║");
     ns.print("╚═══════════════════════════════════════════════════════════╝");
     ns.print("");
     ns.print(`📍 Running on: ${currentServer}`);
@@ -72,6 +67,56 @@ export async function main(ns) {
     ns.print("═══════════════════════════════════════════════════════════");
     
     await ns.sleep(1000);
+    
+    // ═══════════════════════════════════════════════════════════════════
+    // STEP 0: SCP FILES TO HOME (CRITICAL!)
+    // ═══════════════════════════════════════════════════════════════════
+    ns.print("");
+    ns.print("STEP 0/4: Copying files to home...");
+    ns.print("");
+    
+    const filesToCopy = [
+        // Core scripts
+        "/core/target-selector.js",
+        "/core/deploy-workers.js",
+        "/core/auto-spider.js",
+        "/core/spider.js",
+        
+        // Workers
+        "/workers/hack.js",
+        "/workers/grow.js",
+        "/workers/weaken.js",
+        
+        // Lib
+        "/lib/debug.js",
+        "/lib/state-manager.js",
+        "/lib/capabilities.js",
+        "/lib/constants.js",
+        "/lib/formulas-helper.js",
+        "/lib/logger.js",
+        "/lib/network.js"
+    ];
+    
+    let copySuccess = 0;
+    let copyFail = 0;
+    
+    for (const file of filesToCopy) {
+        const success = await ns.scp(file, "home", currentServer);
+        if (success) {
+            copySuccess++;
+        } else {
+            copyFail++;
+            ns.print(`   ⚠️  Failed to copy: ${file}`);
+        }
+    }
+    
+    ns.print(`   ✅ Copied ${copySuccess}/${filesToCopy.length} files to home`);
+    if (copyFail > 0) {
+        ns.print(`   ⚠️  ${copyFail} files failed (may already exist)`);
+    }
+    ns.print("");
+    
+    await ns.sleep(500);
     
     // ═══════════════════════════════════════════════════════════════════
     // STEP 1: SPIDER (ROOT NETWORK)
@@ -116,6 +161,7 @@ export async function main(ns) {
         ns.print("   📄 Created: state/best-target.json");
     } else {
         ns.print("   ❌ Target-selector failed to launch!");
+        ns.print("      Check if file was copied correctly");
         ns.toast("⚠️ Bootstrap: target failed", "error");
         return;
     }
@@ -190,6 +236,7 @@ export async function main(ns) {
     ns.print("═══════════════════════════════════════════════════════════");
     ns.print("🎉 BOOTSTRAP COMPLETE!");
     ns.print("");
+    ns.print("✅ Files copied to home");
     ns.print("✅ Spider: Network rooted");
     ns.print("✅ Target: best-target.json created");
     ns.print("✅ Deploy: Workers active on all servers");
